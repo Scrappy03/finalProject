@@ -1,0 +1,335 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Wellbeing Tracker{% endblock %}
+
+{% block page_title %}Wellbeing{% endblock %}
+
+{% block content %}
+<!-- Hero Header -->
+<section class="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+    <div>
+        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Good morning{% if user.first_name %}, {{
+            user.first_name }}{% endif %}.</h3>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+            {% if recent_entry_count == 0 %}
+            Start logging your wellbeing today to unlock personalised insights.
+            {% elif recent_entry_count < 3 %}
+            Keep logging for a few more days to begin seeing basic patterns.
+            {% elif recent_entry_count < 7 %}
+            Your recent entries are starting to show useful routine patterns.
+            {% else %}
+            Your recent entries are ready for clearer sleep, energy, and mood insights.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'tracker:entry_create' %}"
+        class="w-full md:w-auto flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-200">
+        <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+        Log Today's Entry
+    </a>
+</section>
+
+<!-- Quick Overview Cards (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-gutter">
+    <!-- Average Sleep -->
+    <div
+        class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-secondary" data-icon="bedtime">bedtime</span>
+            <span
+                class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold">AVG</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Wake Time</p>
+        <p class="font-headline-md text-headline-md text-on-surface">
+            {% if today_entry %}
+            {{ today_entry.wake_time|time:"H:i" }}
+            {% else %}
+            --
+            {% endif %}
+        </p>
+        <div class="mt-4 flex items-center gap-1 text-primary">
+            <span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+            <span class="text-[12px] font-semibold">Consistent</span>
+        </div>
+    </div>
+
+    <!-- Sleep Quality -->
+    <div
+        class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Sleep Quality</p>
+        <p class="font-headline-md text-headline-md text-on-surface">
+            {% if today_entry %}
+            {{ today_entry.sleep_quality }}/10
+            {% else %}
+            --
+            {% endif %}
+        </p>
+        <div class="mt-4 w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+            <div class="bg-primary h-full" style="width: {{ sleep_progress_percent|floatformat:0 }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Energy Rating -->
+    <div
+        class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-tertiary" data-icon="bolt">bolt</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Energy Rating</p>
+        <p class="font-headline-md text-headline-md text-on-surface">
+            {{ energy_label }}
+        </p>
+        <div class="mt-4 flex gap-1">
+            {% for i in "1234567890" %}
+            <div
+                class="w-2 h-4 {% if forloop.counter <= energy_bar_score %}bg-tertiary{% else %}bg-surface-container-highest{% endif %} rounded-sm">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Mood Rating -->
+    <div
+        class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-secondary"
+                data-icon="sentiment_satisfied">sentiment_satisfied</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Mood Rating</p>
+        <p class="font-headline-md text-headline-md text-on-surface">
+            {{ mood_label }}
+        </p>
+        <div class="mt-4 flex items-center gap-1 text-on-surface-variant">
+            <span class="text-[12px]">
+                {% if today_entry %}
+                {{ today_entry.mood_rating }}/10
+                {% else %}
+                No entry yet
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Exercise Completion -->
+    <div
+        class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-primary" data-icon="calendar_today">calendar_today</span>
+        </div>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Exercise</p>
+        <p class="font-headline-md text-headline-md text-on-surface">
+            {% if exercise_completed %}
+            ✓
+            {% else %}
+            --
+            {% endif %}
+        </p>
+        {% if exercise_completed %}
+        <div class="mt-4 flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded text-[10px] font-bold">
+            <span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+            DONE
+        </div>
+        {% else %}
+        <div
+            class="mt-4 flex items-center gap-1 text-on-surface-variant bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold">
+            <span class="material-symbols-outlined text-[14px]" data-icon="pending">pending</span>
+            PENDING
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Personalized Insights -->
+<section>
+    <div class="flex items-center justify-between mb-8">
+        <h3 class="font-headline-md text-headline-md text-on-surface">Personalised Insights</h3>
+        <a class="text-primary font-label-md text-label-md flex items-center gap-1 hover:underline"
+            href="{% url 'tracker:report' %}">
+            View Detailed Report
+            <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+        </a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Insight Card 1 -->
+        <div
+            class="group flex gap-6 p-8 rounded-3xl bg-surface-container-low border border-outline-variant/30 hover:border-primary/30 transition-all duration-500">
+            <div
+                class="flex-shrink-0 w-16 h-16 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+                <span class="material-symbols-outlined text-[32px]" data-icon="query_stats">query_stats</span>
+            </div>
+            <div class="space-y-2">
+                <span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Consistency</span>
+                {% if recent_entry_count == 0 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Start logging to unlock insights</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">Your dashboard will become more useful once
+                    it has daily sleep, energy, mood, and exercise data to compare.</p>
+                {% elif recent_entry_count < 3 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Build your baseline</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">Log at least 3 daily entries to begin seeing
+                    basic patterns in your wellbeing data.</p>
+                {% elif recent_entry_count < 7 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Patterns are starting to form</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">You have {{ recent_entry_count }} recent
+                    entries. A full week will make your routine trends easier to interpret.</p>
+                {% else %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Recent averages</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">Across your last {{ recent_entry_count }}
+                    entries, sleep averages {{ average_sleep_quality|floatformat:1 }}/10, energy
+                    {{ average_energy_rating|floatformat:1 }}/10, and mood {{ average_mood_rating|floatformat:1 }}/10.</p>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Insight Card 2 -->
+        <div
+            class="group flex gap-6 p-8 rounded-3xl bg-surface-container-low border border-outline-variant/30 hover:border-primary/30 transition-all duration-500">
+            <div
+                class="flex-shrink-0 w-16 h-16 rounded-2xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
+                <span class="material-symbols-outlined text-[32px]" data-icon="tips_and_updates">tips_and_updates</span>
+            </div>
+            <div class="space-y-2">
+                <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Wellbeing Tip</span>
+                {% if recent_entry_count == 0 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Log your first daily entry</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">A single entry gives the dashboard a
+                    starting point for sleep quality, mood, energy, and exercise.</p>
+                {% elif recent_entry_count < 3 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Aim for 3 entries</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">A few more days of data will make early
+                    wellbeing patterns easier to spot.</p>
+                {% elif recent_entry_count < 7 %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Maintain a consistent sleep schedule</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">Maintaining a consistent sleep schedule may
+                    support better sleep quality and make long-term routine patterns easier to identify.</p>
+                {% else %}
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Exercise and routine signal</h4>
+                <p class="font-body-md text-body-md text-on-surface-variant">You logged exercise on
+                    {{ exercise_completed_count }} of your last {{ recent_entry_count }} tracked days. Compare this with your
+                    energy and mood scores over time.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Weekly Sleep & Mood Correlation -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <div class="lg:col-span-8 bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h4 class="font-headline-md text-headline-md">Weekly Overview</h4>
+                <p class="text-on-surface-variant font-body-md">
+                    {% if recent_entry_count < 3 %}
+                    Log at least 3 daily entries to begin seeing basic patterns.
+                    {% else %}
+                    Your recent sleep, energy, and mood patterns
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-primary"></span>
+                    <span class="text-label-sm">Sleep</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-secondary"></span>
+                    <span class="text-label-sm">Mood</span>
+                </div>
+            </div>
+        </div>
+        <canvas id="weeklyChart" class="max-h-64"></canvas>
+    </div>
+
+    <!-- Focus Challenge Card -->
+    <div
+        class="lg:col-span-4 bg-primary-container text-on-primary-container p-8 rounded-3xl relative overflow-hidden h-full flex flex-col justify-between shadow-sm">
+        <!-- Decorative element -->
+        <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+        <div>
+            <span class="material-symbols-outlined text-[40px] mb-4" data-icon="stars">stars</span>
+            <h4 class="font-headline-sm text-headline-sm mb-2">This Week's Focus</h4>
+            <p class="font-body-md opacity-90">
+                {% if recent_entry_count == 0 %}
+                Add your first entry to start building a wellbeing baseline.
+                {% elif recent_entry_count < 3 %}
+                Reach 3 entries so the dashboard can begin identifying basic patterns.
+                {% elif recent_entry_count < 7 %}
+                Complete a full week of entries to make your routine trends clearer.
+                {% else %}
+                Review your weekly averages and look for links between sleep quality, energy, mood, and exercise.
+                {% endif %}
+            </p>
+        </div>
+        <div class="mt-8">
+            <div class="flex items-center justify-between text-label-sm mb-2">
+                <span>Progress</span>
+                <span>{{ recent_entry_count }}/7 days</span>
+            </div>
+            <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                <div class="bg-white h-full" style="width: {{ entries_progress_percent|floatformat:0 }}%;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Entries -->
+<section>
+    <div class="flex items-center justify-between mb-8">
+        <h3 class="font-headline-md text-headline-md text-on-surface">Recent Entries</h3>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-3xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-label-md text-label-md">
+                <thead class="bg-surface-container-high border-b border-outline-variant">
+                    <tr>
+                        <th class="px-6 py-4 text-left font-semibold text-on-surface">Date</th>
+                        <th class="px-6 py-4 text-left font-semibold text-on-surface">Sleep Quality</th>
+                        <th class="px-6 py-4 text-left font-semibold text-on-surface">Energy</th>
+                        <th class="px-6 py-4 text-left font-semibold text-on-surface">Mood</th>
+                        <th class="px-6 py-4 text-left font-semibold text-on-surface">Exercise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_entry_rows %}
+                    <tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+                        <td class="px-6 py-4 text-on-surface">{{ row.entry.entry_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-block px-3 py-1 bg-surface-container rounded text-on-surface font-semibold">{{ row.entry.sleep_quality }}/10</span>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface">
+                            <span class="{{ row.energy_text_class }}">{{ row.energy_label }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface">{{ row.entry.mood_rating }}/10</td>
+                        <td class="px-6 py-4">
+                            {% if row.entry.exercise_completed %}
+                            <span class="text-primary font-semibold">✓ Yes</span>
+                            {% else %}
+                            <span class="text-on-surface-variant">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-on-surface-variant">
+                            No entries yet. Start logging your wellbeing today!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ chart_labels|json_script:"chart-labels" }}
+{{ sleep_chart_data|json_script:"sleep-data" }}
+{{ mood_chart_data|json_script:"mood-data" }}
+<script src="{% static 'js/charts.js' %}"></script>
+{% endblock %}
