@@ -44,6 +44,38 @@
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
     }
+
+    .custom-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        background: #e4e2dd;
+        border-radius: 999px;
+        outline: none;
+    }
+
+    .custom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #47644f;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 3px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #47644f;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 3px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 }
 
 @layer utilities {

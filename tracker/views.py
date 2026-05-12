@@ -1,7 +1,10 @@
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from datetime import timedelta
+
+from .forms import DailyEntryForm
 from .models import UserProfile, DailyEntry
-from datetime import datetime, timedelta
 
 
 def clamp_percent(value):
@@ -42,7 +45,7 @@ def dashboard(request):
         user_profile = None
     
     # Get today's entry
-    today = datetime.now().date()
+    today = timezone.localdate()
     today_entry = DailyEntry.objects.filter(user=request.user, entry_date=today).first()
     
     # Get last 7 days of entries
@@ -119,8 +122,21 @@ def dashboard(request):
 
 @login_required
 def entry_create(request):
-    """Display the daily entry form page."""
-    return render(request, 'tracker/entry_form.html')
+    """Create or update a daily wellbeing entry for the signed-in user."""
+    today = timezone.localdate()
+    entry = DailyEntry.objects.filter(user=request.user, entry_date=today).first()
+
+    if request.method == "POST":
+        form = DailyEntryForm(request.POST, instance=entry)
+        if form.is_valid():
+            daily_entry = form.save(commit=False)
+            daily_entry.user = request.user
+            daily_entry.save()
+            return redirect("tracker:dashboard")
+    else:
+        form = DailyEntryForm(instance=entry, initial={"entry_date": today})
+
+    return render(request, 'tracker/entry_form.html', {"form": form, "entry": entry})
 
 
 @login_required

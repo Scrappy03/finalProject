@@ -5,17 +5,282 @@
 {% block page_title %}Log Entry{% endblock %}
 
 {% block content %}
-<section class="max-w-2xl">
-    <div class="bg-surface-container-lowest border border-outline-variant p-8 rounded-3xl">
-        <h3 class="font-headline-md text-headline-md text-on-surface mb-3">Log Today's Entry</h3>
-        <p class="font-body-md text-body-md text-on-surface-variant mb-6">
-            This page is ready for the daily wellbeing form.
+<div class="max-w-[1000px] w-full space-y-12 pb-16">
+    <div>
+        <p class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-3">Daily Log</p>
+        <h1 class="font-display-lg text-display-lg text-primary mb-3">How was your day?</h1>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+            Reflect on your habits and state of being. Each entry feeds your dashboard with better sleep, energy, mood,
+            and routine patterns.
         </p>
-        <a href="{% url 'tracker:dashboard' %}"
-            class="inline-flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
-            <span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
-            Back to dashboard
-        </a>
     </div>
-</section>
+
+    <form method="post" class="space-y-14" data-entry-form novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="rounded-xl border border-error bg-error/10 px-5 py-4 text-error font-body-md text-body-md">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <section>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined" data-variation-settings="fill">bedtime</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md text-on-surface">Rest & Recovery</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+                <label class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[150px] hover:shadow-md transition-shadow">
+                    <span class="font-label-md text-label-md text-on-surface-variant mb-4 uppercase tracking-wider">Entry Date</span>
+                    {{ form.entry_date }}
+                    {{ form.entry_date.errors }}
+                </label>
+
+                <label class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[150px] hover:shadow-md transition-shadow">
+                    <span class="font-label-md text-label-md text-on-surface-variant mb-4 uppercase tracking-wider">Bedtime</span>
+                    {{ form.bedtime }}
+                    {{ form.bedtime.errors }}
+                </label>
+
+                <label class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[150px] hover:shadow-md transition-shadow">
+                    <span class="font-label-md text-label-md text-on-surface-variant mb-4 uppercase tracking-wider">Wake Time</span>
+                    {{ form.wake_time }}
+                    {{ form.wake_time.errors }}
+                </label>
+
+                <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[150px] md:col-span-2 lg:col-span-3 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <label for="{{ form.sleep_quality.id_for_label }}" class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Sleep Quality</label>
+                        <span class="font-headline-sm text-headline-sm text-primary" data-range-output="id_sleep_quality">{{ form.sleep_quality.value|default:"5" }}</span>
+                    </div>
+                    {{ form.sleep_quality }}
+                    <div class="flex justify-between text-[10px] text-on-surface-variant font-bold">
+                        <span>POOR</span>
+                        <span>EXCELLENT</span>
+                    </div>
+                    {{ form.sleep_quality.errors }}
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined" data-variation-settings="fill">bolt</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md text-on-surface">Daily Habits</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between gap-4 mb-5">
+                        <label for="{{ form.evening_screen_time.id_for_label }}" class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Evening Screen Time</label>
+                        <span class="font-label-md text-label-md bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-full">Habit</span>
+                    </div>
+                    <div class="hidden">
+                        {{ form.evening_screen_time }}
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" data-screen-time-picker>
+                        <button class="screen-time-option rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all" type="button" data-screen-value="none">None</button>
+                        <button class="screen-time-option rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all" type="button" data-screen-value="under_30">&lt;30m</button>
+                        <button class="screen-time-option rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all" type="button" data-screen-value="30_60">30-60m</button>
+                        <button class="screen-time-option rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all" type="button" data-screen-value="1_2">1-2h</button>
+                        <button class="screen-time-option rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all" type="button" data-screen-value="2_plus">2h+</button>
+                    </div>
+                    {{ form.evening_screen_time.errors }}
+                </div>
+
+                <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                            <label for="{{ form.latest_caffeine_time.id_for_label }}" class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Latest Caffeine Time</label>
+                            <p class="text-[11px] text-on-surface-variant font-medium mt-2">Only needed if you had caffeine today.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer" aria-label="Caffeine consumed today">
+                            {{ form.caffeine_consumed }}
+                            <span class="w-14 h-8 bg-surface-container-highest rounded-full peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:bg-primary after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:border-outline-variant after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-6 peer-checked:after:border-white"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-end gap-4" data-caffeine-time-panel>
+                        <div class="flex-1">
+                            {{ form.latest_caffeine_time }}
+                            {{ form.latest_caffeine_time.errors }}
+                        </div>
+                        <span class="material-symbols-outlined text-3xl text-on-surface-variant mb-2">coffee</span>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[32px]">fitness_center</span>
+                        </div>
+                        <div>
+                            <h4 class="font-headline-sm text-headline-sm text-on-surface">Exercise Completed</h4>
+                            <p class="font-body-md text-body-md text-on-surface-variant">Any physical activity longer than 20 minutes</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer" aria-label="Exercise completed">
+                        {{ form.exercise_completed }}
+                        <span class="w-16 h-9 bg-surface-container-highest rounded-full peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:bg-primary after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border after:border-outline-variant after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:after:translate-x-7 peer-checked:after:border-white"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                    <span class="material-symbols-outlined" data-variation-settings="fill">favorite</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md text-on-surface">Internal State</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <label for="{{ form.energy_rating.id_for_label }}" class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Overall Energy</label>
+                        <span class="font-headline-sm text-headline-sm text-primary" data-range-output="id_energy_rating">{{ form.energy_rating.value|default:"5" }}</span>
+                    </div>
+                    {{ form.energy_rating }}
+                    <div class="flex justify-between text-[10px] text-on-surface-variant font-bold">
+                        <span>DRAINED</span>
+                        <span>VIBRANT</span>
+                    </div>
+                    {{ form.energy_rating.errors }}
+                </div>
+
+                <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between min-h-[160px] hover:shadow-md transition-shadow">
+                    <label class="font-label-md text-label-md text-on-surface-variant mb-6 uppercase tracking-wider">Current Mood</label>
+                    {{ form.mood_rating }}
+                    <div class="grid grid-cols-5 gap-2" data-mood-picker>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="2">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-error transition-colors">sentiment_very_dissatisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-error">LOW</span>
+                        </button>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="4">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-tertiary transition-colors">sentiment_dissatisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-tertiary">BLAH</span>
+                        </button>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="6">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-primary transition-colors">sentiment_neutral</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary">OKAY</span>
+                        </button>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="8">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-secondary transition-colors">sentiment_satisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-secondary">GOOD</span>
+                        </button>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="10">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-primary transition-colors">sentiment_very_satisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary">GREAT</span>
+                        </button>
+                    </div>
+                    {{ form.mood_rating.errors }}
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/30 hover:shadow-md transition-shadow">
+                <label for="{{ form.notes.id_for_label }}" class="font-headline-sm text-headline-sm text-on-surface mb-4 block">Reflections & Notes</label>
+                {{ form.notes }}
+                {{ form.notes.errors }}
+            </div>
+        </section>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-4">
+            <a href="{% url 'tracker:dashboard' %}"
+                class="inline-flex items-center justify-center px-8 py-3 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/5 transition-all active:scale-95">
+                Cancel
+            </a>
+            <button class="inline-flex items-center justify-center gap-2 px-12 py-3 rounded-lg bg-primary text-on-primary font-semibold shadow-lg shadow-primary/20 hover:translate-y-[-2px] transition-all active:scale-95" type="submit">
+                <span class="material-symbols-outlined text-sm">save</span>
+                Save Entry
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('[data-range-output]').forEach((output) => {
+        const input = document.getElementById(output.dataset.rangeOutput);
+        if (!input) return;
+        const sync = () => output.textContent = input.value || '5';
+        input.addEventListener('input', sync);
+        sync();
+    });
+
+    const screenTimeInput = document.getElementById('id_evening_screen_time');
+    const screenTimeButtons = document.querySelectorAll('[data-screen-value]');
+
+    function setScreenTime(value) {
+        if (!screenTimeInput) return;
+        screenTimeInput.value = value;
+        screenTimeButtons.forEach((button) => {
+            const isActive = button.dataset.screenValue === value;
+            button.classList.toggle('bg-primary', isActive);
+            button.classList.toggle('text-on-primary', isActive);
+            button.classList.toggle('border-primary', isActive);
+            button.classList.toggle('shadow-sm', isActive);
+            button.classList.toggle('bg-surface-container-low', !isActive);
+            button.classList.toggle('text-on-surface-variant', !isActive);
+            button.classList.toggle('border-outline-variant', !isActive);
+        });
+    }
+
+    screenTimeButtons.forEach((button) => {
+        button.addEventListener('click', () => setScreenTime(button.dataset.screenValue));
+    });
+    if (screenTimeInput?.value) {
+        setScreenTime(screenTimeInput.value);
+    }
+
+    const caffeineToggle = document.getElementById('id_caffeine_consumed');
+    const caffeineTimeInput = document.getElementById('id_latest_caffeine_time');
+    const caffeineTimePanel = document.querySelector('[data-caffeine-time-panel]');
+
+    function syncCaffeineTime() {
+        if (!caffeineToggle || !caffeineTimeInput || !caffeineTimePanel) return;
+        const isEnabled = caffeineToggle.checked;
+        caffeineTimeInput.disabled = !isEnabled;
+        caffeineTimeInput.required = isEnabled;
+        if (!isEnabled) {
+            caffeineTimeInput.value = '';
+        }
+        caffeineTimePanel.classList.toggle('opacity-40', !isEnabled);
+        caffeineTimePanel.classList.toggle('pointer-events-none', !isEnabled);
+    }
+
+    caffeineToggle?.addEventListener('change', syncCaffeineTime);
+    syncCaffeineTime();
+
+    const moodInput = document.getElementById('id_mood_rating');
+    const moodButtons = document.querySelectorAll('[data-mood-value]');
+
+    function setMood(value) {
+        if (!moodInput) return;
+        moodInput.value = value;
+        moodButtons.forEach((button) => {
+            const isActive = button.dataset.moodValue === String(value);
+            button.classList.toggle('bg-primary-container', isActive);
+            button.classList.toggle('border-primary', isActive);
+            button.classList.toggle('shadow-sm', isActive);
+            button.querySelectorAll('span').forEach((span) => {
+                span.classList.toggle('text-on-primary-container', isActive);
+                span.classList.toggle('text-on-surface-variant', !isActive);
+            });
+            button.querySelector('.material-symbols-outlined')?.toggleAttribute('data-variation-settings', isActive);
+        });
+    }
+
+    moodButtons.forEach((button) => {
+        button.addEventListener('click', () => setMood(button.dataset.moodValue));
+    });
+    setMood(moodInput?.value || '6');
+</script>
 {% endblock %}
