@@ -45,6 +45,14 @@
         backdrop-filter: blur(12px);
     }
 
+    .login-card {
+        box-shadow: 0 10px 40px -10px rgba(71, 100, 79, 0.08);
+    }
+
+    .input-underlined:focus-within {
+        background-color: rgba(71, 100, 79, 0.04);
+    }
+
     .custom-slider {
         -webkit-appearance: none;
         appearance: none;

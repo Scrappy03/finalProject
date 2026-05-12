@@ -1,10 +1,27 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from datetime import timedelta
 
-from .forms import DailyEntryForm
+from .forms import DailyEntryForm, SanctuaryLoginForm
 from .models import UserProfile, DailyEntry
+
+
+class SanctuaryLoginView(LoginView):
+    authentication_form = SanctuaryLoginForm
+    redirect_authenticated_user = True
+    template_name = "tracker/login.html"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if not self.request.POST.get("remember"):
+            self.request.session.set_expiry(0)
+        return response
+
+
+class SanctuaryLogoutView(LogoutView):
+    pass
 
 
 def clamp_percent(value):
@@ -36,6 +53,19 @@ def get_energy_text_class(energy_rating):
     return "text-error"
 
 
+def format_average_time(entries, field_name):
+    if not entries:
+        return "--"
+
+    total_minutes = sum(
+        getattr(entry, field_name).hour * 60 + getattr(entry, field_name).minute
+        for entry in entries
+    )
+    average_minutes = round(total_minutes / len(entries))
+    hours, minutes = divmod(average_minutes, 60)
+    return f"{hours % 24:02d}:{minutes:02d}"
+
+
 @login_required
 def dashboard(request):
     """Display the main dashboard with wellbeing overview."""
@@ -44,7 +74,7 @@ def dashboard(request):
     except UserProfile.DoesNotExist:
         user_profile = None
     
-    # Get today's entry
+    # Keep today's entry available for update logic, but dashboard cards use recent averages.
     today = timezone.localdate()
     today_entry = DailyEntry.objects.filter(user=request.user, entry_date=today).first()
     
@@ -56,18 +86,15 @@ def dashboard(request):
     ).order_by('-entry_date')[:7])
     recent_entry_count = len(recent_entries)
     
-    # Calculate progress percentages
+    latest_entry = recent_entries[0] if recent_entries else None
+    last_logged_entry = DailyEntry.objects.filter(user=request.user).order_by("-created_at").first()
+
+    # Calculate 7-day overview values
     sleep_progress_percent = 0
     energy_label = "--"
     mood_label = "--"
     energy_bar_score = 0
-    exercise_completed = False
-    if today_entry:
-        sleep_progress_percent = clamp_percent((today_entry.sleep_quality / 10) * 100)
-        energy_label = get_energy_label(today_entry.energy_rating)
-        mood_label = get_mood_label(today_entry.mood_rating)
-        energy_bar_score = today_entry.energy_rating
-        exercise_completed = today_entry.exercise_completed
+    average_wake_time = "--"
     
     entries_progress_percent = 0
     if recent_entry_count > 0:
@@ -82,6 +109,11 @@ def dashboard(request):
         average_energy_rating = sum(entry.energy_rating for entry in recent_entries) / recent_entry_count
         average_mood_rating = sum(entry.mood_rating for entry in recent_entries) / recent_entry_count
         exercise_completed_count = sum(1 for entry in recent_entries if entry.exercise_completed)
+        average_wake_time = format_average_time(recent_entries, "wake_time")
+        sleep_progress_percent = clamp_percent((average_sleep_quality / 10) * 100)
+        energy_label = get_energy_label(average_energy_rating)
+        mood_label = get_mood_label(average_mood_rating)
+        energy_bar_score = round(average_energy_rating)
 
     recent_entry_rows = [
         {
@@ -99,6 +131,8 @@ def dashboard(request):
     context = {
         'user_profile': user_profile,
         'today_entry': today_entry,
+        'latest_entry': latest_entry,
+        'last_logged_entry': last_logged_entry,
         'recent_entries': recent_entries,
         'recent_entry_rows': recent_entry_rows,
         'recent_entry_count': recent_entry_count,
@@ -108,10 +142,10 @@ def dashboard(request):
         'average_energy_rating': average_energy_rating,
         'average_mood_rating': average_mood_rating,
         'exercise_completed_count': exercise_completed_count,
+        'average_wake_time': average_wake_time,
         'energy_label': energy_label,
         'mood_label': mood_label,
         'energy_bar_score': energy_bar_score,
-        'exercise_completed': exercise_completed,
         'chart_labels': chart_labels,
         'sleep_chart_data': sleep_chart_data,
         'mood_chart_data': mood_chart_data,
@@ -127,6 +161,10 @@ def entry_create(request):
     entry = DailyEntry.objects.filter(user=request.user, entry_date=today).first()
 
     if request.method == "POST":
+        posted_entry_date = request.POST.get("entry_date")
+        entry = None
+        if posted_entry_date:
+            entry = DailyEntry.objects.filter(user=request.user, entry_date=posted_entry_date).first()
         form = DailyEntryForm(request.POST, instance=entry)
         if form.is_valid():
             daily_entry = form.save(commit=False)

@@ -6,6 +6,31 @@ from django.utils import timezone
 from .models import DailyEntry
 
 
+class AuthFlowTests(TestCase):
+    def test_dashboard_redirects_anonymous_users_to_login(self):
+        response = self.client.get(reverse("tracker:dashboard"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('tracker:login')}?next={reverse('tracker:dashboard')}",
+        )
+
+    def test_login_accepts_user_email(self):
+        get_user_model().objects.create_user(
+            username="emailuser",
+            email="emailuser@example.com",
+            password="pass12345",
+        )
+
+        response = self.client.post(reverse("tracker:login"), {
+            "username": "emailuser@example.com",
+            "password": "pass12345",
+        })
+
+        self.assertRedirects(response, reverse("tracker:dashboard"))
+        self.assertIn("_auth_user_id", self.client.session)
+
+
 class DailyEntryFlowTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(

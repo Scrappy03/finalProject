@@ -1,19 +1,18 @@
 {% extends 'tracker/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Wellbeing Tracker{% endblock %}
+{% block title %}Dashboard - Sanctuary{% endblock %}
 
-{% block page_title %}Wellbeing{% endblock %}
+{% block page_title %}Sanctuary{% endblock %}
 
 {% block content %}
 <!-- Hero Header -->
 <section class="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
     <div>
-        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Good morning{% if user.first_name %}, {{
-            user.first_name }}{% endif %}.</h3>
+        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Good morning{% if user.first_name %}, {{ user.first_name }}{% endif %}.</h3>
         <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
             {% if recent_entry_count == 0 %}
-            Start logging your wellbeing today to unlock personalised insights.
+            Start logging your wellbeing to unlock personalised insights.
             {% elif recent_entry_count < 3 %}
             Keep logging for a few more days to begin seeing basic patterns.
             {% elif recent_entry_count < 7 %}
@@ -22,11 +21,18 @@
             Your recent entries are ready for clearer sleep, energy, and mood insights.
             {% endif %}
         </p>
+        <p class="mt-3 font-label-md text-label-md text-on-surface-variant">
+            {% if last_logged_entry %}
+            Last logged: {{ last_logged_entry.created_at|date:"M d, Y, H:i" }}
+            {% else %}
+            Last logged: No entries yet
+            {% endif %}
+        </p>
     </div>
     <a href="{% url 'tracker:entry_create' %}"
         class="w-full md:w-auto flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-200">
         <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
-        Log Today's Entry
+        Log Entry
     </a>
 </section>
 
@@ -40,17 +46,13 @@
             <span
                 class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold">AVG</span>
         </div>
-        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Wake Time</p>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Avg Wake Time</p>
         <p class="font-headline-md text-headline-md text-on-surface">
-            {% if today_entry %}
-            {{ today_entry.wake_time|time:"H:i" }}
-            {% else %}
-            --
-            {% endif %}
+            {{ average_wake_time }}
         </p>
         <div class="mt-4 flex items-center gap-1 text-primary">
             <span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
-            <span class="text-[12px] font-semibold">Consistent</span>
+            <span class="text-[12px] font-semibold">7-day view</span>
         </div>
     </div>
 
@@ -60,10 +62,10 @@
         <div class="flex justify-between items-start mb-4">
             <span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
         </div>
-        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Sleep Quality</p>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Avg Sleep Quality</p>
         <p class="font-headline-md text-headline-md text-on-surface">
-            {% if today_entry %}
-            {{ today_entry.sleep_quality }}/10
+            {% if recent_entry_count %}
+            {{ average_sleep_quality|floatformat:1 }}/10
             {% else %}
             --
             {% endif %}
@@ -79,7 +81,7 @@
         <div class="flex justify-between items-start mb-4">
             <span class="material-symbols-outlined text-tertiary" data-icon="bolt">bolt</span>
         </div>
-        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Energy Rating</p>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Avg Energy</p>
         <p class="font-headline-md text-headline-md text-on-surface">
             {{ energy_label }}
         </p>
@@ -99,16 +101,16 @@
             <span class="material-symbols-outlined text-secondary"
                 data-icon="sentiment_satisfied">sentiment_satisfied</span>
         </div>
-        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Mood Rating</p>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Avg Mood</p>
         <p class="font-headline-md text-headline-md text-on-surface">
             {{ mood_label }}
         </p>
         <div class="mt-4 flex items-center gap-1 text-on-surface-variant">
             <span class="text-[12px]">
-                {% if today_entry %}
-                {{ today_entry.mood_rating }}/10
+                {% if recent_entry_count %}
+                {{ average_mood_rating|floatformat:1 }}/10
                 {% else %}
-                No entry yet
+                No entries yet
                 {% endif %}
             </span>
         </div>
@@ -120,24 +122,24 @@
         <div class="flex justify-between items-start mb-4">
             <span class="material-symbols-outlined text-primary" data-icon="calendar_today">calendar_today</span>
         </div>
-        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Exercise</p>
+        <p class="font-label-md text-label-md text-on-surface-variant mb-1">Exercise Days</p>
         <p class="font-headline-md text-headline-md text-on-surface">
-            {% if exercise_completed %}
-            ✓
+            {% if recent_entry_count %}
+            {{ exercise_completed_count }}/{{ recent_entry_count }}
             {% else %}
             --
             {% endif %}
         </p>
-        {% if exercise_completed %}
+        {% if exercise_completed_count %}
         <div class="mt-4 flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded text-[10px] font-bold">
             <span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
-            DONE
+            ACTIVE
         </div>
         {% else %}
         <div
             class="mt-4 flex items-center gap-1 text-on-surface-variant bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold">
             <span class="material-symbols-outlined text-[14px]" data-icon="pending">pending</span>
-            PENDING
+            NO DATA
         </div>
         {% endif %}
     </div>
@@ -315,7 +317,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-on-surface-variant">
-                            No entries yet. Start logging your wellbeing today!
+                            No entries yet. Start logging your wellbeing to build your baseline.
                         </td>
                     </tr>
                     {% endfor %}
