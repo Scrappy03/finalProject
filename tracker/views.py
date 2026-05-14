@@ -5,7 +5,9 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .forms import DailyEntryForm, SanctuaryLoginForm
+from .insights import build_insights_context
 from .models import UserProfile, DailyEntry
+from .utils import clamp_percent
 
 
 class SanctuaryLoginView(LoginView):
@@ -24,9 +26,11 @@ class SanctuaryLogoutView(LogoutView):
     pass
 
 
-def clamp_percent(value):
-    """Keep progress bar widths within valid percentage bounds."""
-    return max(0, min(100, value))
+def get_user_profile(user):
+    try:
+        return UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        return None
 
 
 def get_energy_label(energy_rating):
@@ -69,10 +73,7 @@ def format_average_time(entries, field_name):
 @login_required
 def dashboard(request):
     """Display the main dashboard with wellbeing overview."""
-    try:
-        user_profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        user_profile = None
+    user_profile = get_user_profile(request.user)
     
     # Keep today's entry available for update logic, but dashboard cards use recent averages.
     today = timezone.localdate()
@@ -175,6 +176,14 @@ def entry_create(request):
         form = DailyEntryForm(instance=entry, initial={"entry_date": today})
 
     return render(request, 'tracker/entry_form.html', {"form": form, "entry": entry})
+
+
+@login_required
+def insights(request):
+    """Display the personal insights page."""
+    user_profile = get_user_profile(request.user)
+    context = build_insights_context(request.user, user_profile)
+    return render(request, 'tracker/insights.html', context)
 
 
 @login_required

@@ -150,7 +150,7 @@
     <div class="flex items-center justify-between mb-8">
         <h3 class="font-headline-md text-headline-md text-on-surface">Personalised Insights</h3>
         <a class="text-primary font-label-md text-label-md flex items-center gap-1 hover:underline"
-            href="{% url 'tracker:report' %}">
+            href="{% url 'tracker:insights' %}">
             View Detailed Report
             <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
         </a>
@@ -207,7 +207,7 @@
                 <p class="font-body-md text-body-md text-on-surface-variant">Maintaining a consistent sleep schedule may
                     support better sleep quality and make long-term routine patterns easier to identify.</p>
                 {% else %}
-                <h4 class="font-headline-sm text-headline-sm text-on-surface">Exercise and routine signal</h4>
+                <h4 class="font-headline-sm text-headline-sm text-on-surface">Exercise and routine sign</h4>
                 <p class="font-body-md text-body-md text-on-surface-variant">You logged exercise on
                     {{ exercise_completed_count }} of your last {{ recent_entry_count }} tracked days. Compare this with your
                     energy and mood scores over time.</p>
@@ -333,5 +333,6 @@
 {{ chart_labels|json_script:"chart-labels" }}
 {{ sleep_chart_data|json_script:"sleep-data" }}
 {{ mood_chart_data|json_script:"mood-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
 {% endblock %}

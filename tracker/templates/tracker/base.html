@@ -36,12 +36,6 @@
                 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                 <span class="font-label-md text-label-md">Dashboard</span>
             </a>
-            <!-- Log Entry -->
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200 rounded-lg"
-                href="{% url 'tracker:entry_create' %}">
-                <span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
-                <span class="font-label-md text-label-md">Log Entry</span>
-            </a>
             <!-- Trends -->
             <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200 rounded-lg"
                 href="#">
@@ -49,9 +43,9 @@
                 <span class="font-label-md text-label-md">Trends</span>
             </a>
             <!-- Insights -->
-            <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200 rounded-lg"
-                href="#">
-                <span class="material-symbols-outlined" data-icon="lightbulb">lightbulb</span>
+            <a class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'insights' %}bg-secondary-container text-on-secondary-container rounded-lg font-semibold translate-x-1{% else %}text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg{% endif %} transition-all duration-200"
+                href="{% url 'tracker:insights' %}">
+                <span class="material-symbols-outlined" data-icon="lightbulb"{% if request.resolver_match.url_name == 'insights' %} data-variation-settings="filled"{% endif %}>lightbulb</span>
                 <span class="font-label-md text-label-md">Insights</span>
             </a>
             <!-- Goals -->
@@ -133,9 +127,6 @@
         </div>
 
     </main>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
     {% block extra_js %}{% endblock %}
 </body>
