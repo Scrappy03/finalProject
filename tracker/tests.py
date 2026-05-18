@@ -79,6 +79,7 @@ class DailyEntryFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["recent_entry_count"], 1)
         self.assertEqual(response.context["today_entry"].sleep_quality, 8)
+        self.assertEqual(response.context["weekly_focus"]["title"], "Build your baseline")
 
     def test_dashboard_uses_profile_exercise_goal(self):
         UserProfile.objects.create(
@@ -95,7 +96,76 @@ class DailyEntryFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["exercise_completed_count"], 0)
         self.assertEqual(response.context["weekly_exercise_goal"], 4)
+        self.assertEqual(response.context["weekly_focus"]["title"], "Build your baseline")
         self.assertContains(response, "0/4")
+
+    def test_dashboard_exercise_count_uses_current_calendar_week(self):
+        today = timezone.localdate()
+        week_start = today - timezone.timedelta(days=today.weekday())
+        last_week = week_start - timezone.timedelta(days=1)
+
+        UserProfile.objects.create(
+            user=self.user,
+            target_bedtime="22:30",
+            target_wake_time="07:00",
+            caffeine_cutoff="16:00",
+            weekly_exercise_goal=4,
+            wellbeing_focus="routine",
+        )
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=last_week,
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            exercise_completed=True,
+            energy_rating=7,
+            mood_rating=8,
+        )
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=today,
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            exercise_completed=True,
+            energy_rating=7,
+            mood_rating=8,
+        )
+
+        response = self.client.get(reverse("tracker:dashboard"))
+
+        self.assertEqual(response.context["exercise_completed_count"], 1)
+        self.assertContains(response, "1/4")
+
+    def test_dashboard_weekly_focus_uses_exercise_goal_after_baseline(self):
+        UserProfile.objects.create(
+            user=self.user,
+            target_bedtime="22:30",
+            target_wake_time="07:00",
+            caffeine_cutoff="16:00",
+            weekly_exercise_goal=4,
+            wellbeing_focus="routine",
+        )
+        for days_ago in range(3):
+            DailyEntry.objects.create(
+                user=self.user,
+                entry_date=timezone.localdate() - timezone.timedelta(days=days_ago),
+                bedtime="22:30",
+                wake_time="07:00",
+                sleep_quality=8,
+                evening_screen_time="30_60",
+                exercise_completed=False,
+                energy_rating=7,
+                mood_rating=8,
+            )
+
+        response = self.client.get(reverse("tracker:dashboard"))
+
+        self.assertEqual(response.context["weekly_focus"]["title"], "Move toward your exercise goal")
+        self.assertEqual(response.context["weekly_focus"]["progress_label"], "0/4 days")
 
 
 class GoalsFlowTests(TestCase):

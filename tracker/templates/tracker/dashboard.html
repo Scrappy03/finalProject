@@ -126,18 +126,14 @@
         <p class="font-headline-md text-headline-md text-on-surface">
             {{ exercise_completed_count }}/{{ weekly_exercise_goal }}
         </p>
-        {% if exercise_completed_count %}
-        <div class="mt-4 flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded text-[10px] font-bold">
+        <div class="mt-4 flex items-center gap-1 {% if exercise_completed_count %}text-primary bg-primary/10{% else %}text-on-surface-variant bg-surface-container{% endif %} px-2 py-0.5 rounded text-[10px] font-bold">
+            {% if exercise_completed_count %}
             <span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
             ACTIVE
+            {% else %}
+            THIS WEEK
+            {% endif %}
         </div>
-        {% else %}
-        <div
-            class="mt-4 flex items-center gap-1 text-on-surface-variant bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold">
-            <span class="material-symbols-outlined text-[14px]" data-icon="pending">pending</span>
-            NO DATA
-        </div>
-        {% endif %}
     </div>
 </section>
 
@@ -248,26 +244,18 @@
         <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
         <div>
             <span class="material-symbols-outlined text-[40px] mb-4" data-icon="stars">stars</span>
-            <h4 class="font-headline-sm text-headline-sm mb-2">This Week's Focus</h4>
+            <h4 class="font-headline-sm text-headline-sm mb-2">{{ weekly_focus.title }}</h4>
             <p class="font-body-md opacity-90">
-                {% if recent_entry_count == 0 %}
-                Add your first entry to start building a wellbeing baseline.
-                {% elif recent_entry_count < 3 %}
-                Reach 3 entries so the dashboard can begin identifying basic patterns.
-                {% elif recent_entry_count < 7 %}
-                Complete a full week of entries to make your routine trends clearer.
-                {% else %}
-                Review your weekly averages and look for links between sleep quality, energy, mood, and exercise.
-                {% endif %}
+                {{ weekly_focus.body }}
             </p>
         </div>
         <div class="mt-8">
             <div class="flex items-center justify-between text-label-sm mb-2">
                 <span>Progress</span>
-                <span>{{ recent_entry_count }}/7 days</span>
+                <span>{{ weekly_focus.progress_label }}</span>
             </div>
             <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
-                <div class="bg-white h-full" style="width: {{ entries_progress_percent|floatformat:0 }}%;"></div>
+                <div class="bg-white h-full" style="width: {{ weekly_focus.progress_percent|floatformat:0 }}%;"></div>
             </div>
         </div>
     </div>

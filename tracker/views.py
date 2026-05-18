@@ -106,6 +106,48 @@ def get_daily_streak(user):
     return streak
 
 
+def build_weekly_focus(total_entry_count, exercise_completed_count, weekly_exercise_goal, user_profile):
+    if total_entry_count < 3:
+        return {
+            "title": "Build your baseline",
+            "body": (
+                "Log at least 3 daily entries so Sanctuary can begin identifying basic sleep, energy, and mood patterns."
+            ),
+            "progress_label": f"{total_entry_count}/3 entries",
+            "progress_percent": clamp_percent((total_entry_count / 3) * 100),
+        }
+
+    if weekly_exercise_goal and exercise_completed_count < weekly_exercise_goal:
+        remaining_days = weekly_exercise_goal - exercise_completed_count
+        return {
+            "title": "Move toward your exercise goal",
+            "body": (
+                f"You have {remaining_days} exercise day{'' if remaining_days == 1 else 's'} left to reach this week's "
+                "target. Log any completed movement day to keep the week on track."
+            ),
+            "progress_label": f"{exercise_completed_count}/{weekly_exercise_goal} days",
+            "progress_percent": clamp_percent((exercise_completed_count / weekly_exercise_goal) * 100),
+        }
+
+    if user_profile:
+        return {
+            "title": "Protect your sleep timing",
+            "body": (
+                f"Aim for your {format_time(user_profile.target_bedtime)} bedtime and "
+                f"{format_time(user_profile.target_wake_time)} wake time this week."
+            ),
+            "progress_label": "Sleep routine",
+            "progress_percent": 100,
+        }
+
+    return {
+        "title": "Review your insights",
+        "body": "Check your detailed insights to choose the next small experiment for your routine.",
+        "progress_label": "Ready",
+        "progress_percent": 100,
+    }
+
+
 @login_required
 def dashboard(request):
     """Display the main dashboard with wellbeing overview."""
@@ -114,6 +156,7 @@ def dashboard(request):
     # Keep today's entry available for update logic, but dashboard cards use recent averages.
     today = timezone.localdate()
     today_entry = DailyEntry.objects.filter(user=request.user, entry_date=today).first()
+    week_start = today - timedelta(days=today.weekday())
     
     # Get last 7 days of entries
     seven_days_ago = today - timedelta(days=7)
@@ -125,6 +168,13 @@ def dashboard(request):
     
     latest_entry = recent_entries[0] if recent_entries else None
     last_logged_entry = DailyEntry.objects.filter(user=request.user).order_by("-created_at").first()
+    total_entry_count = DailyEntry.objects.filter(user=request.user).count()
+    weekly_exercise_entries = DailyEntry.objects.filter(
+        user=request.user,
+        entry_date__gte=week_start,
+        entry_date__lte=today,
+        exercise_completed=True,
+    )
 
     # Calculate 7-day overview values
     sleep_progress_percent = 0
@@ -140,13 +190,12 @@ def dashboard(request):
     average_sleep_quality = 0
     average_energy_rating = 0
     average_mood_rating = 0
-    exercise_completed_count = 0
+    exercise_completed_count = weekly_exercise_entries.count()
     weekly_exercise_goal = user_profile.weekly_exercise_goal if user_profile else 3
     if recent_entry_count > 0:
         average_sleep_quality = sum(entry.sleep_quality for entry in recent_entries) / recent_entry_count
         average_energy_rating = sum(entry.energy_rating for entry in recent_entries) / recent_entry_count
         average_mood_rating = sum(entry.mood_rating for entry in recent_entries) / recent_entry_count
-        exercise_completed_count = sum(1 for entry in recent_entries if entry.exercise_completed)
         average_wake_time = format_average_time(recent_entries, "wake_time")
         sleep_progress_percent = clamp_percent((average_sleep_quality / 10) * 100)
         energy_label = get_energy_label(average_energy_rating)
@@ -165,6 +214,12 @@ def dashboard(request):
     chart_labels = [entry.entry_date.strftime("%a") for entry in chart_entries]
     sleep_chart_data = [entry.sleep_quality for entry in chart_entries]
     mood_chart_data = [entry.mood_rating for entry in chart_entries]
+    weekly_focus = build_weekly_focus(
+        total_entry_count,
+        exercise_completed_count,
+        weekly_exercise_goal,
+        user_profile,
+    )
 
     context = {
         'user_profile': user_profile,
@@ -174,6 +229,7 @@ def dashboard(request):
         'recent_entries': recent_entries,
         'recent_entry_rows': recent_entry_rows,
         'recent_entry_count': recent_entry_count,
+        'total_entry_count': total_entry_count,
         'sleep_progress_percent': sleep_progress_percent,
         'entries_progress_percent': entries_progress_percent,
         'average_sleep_quality': average_sleep_quality,
@@ -188,6 +244,7 @@ def dashboard(request):
         'chart_labels': chart_labels,
         'sleep_chart_data': sleep_chart_data,
         'mood_chart_data': mood_chart_data,
+        'weekly_focus': weekly_focus,
     }
     
     return render(request, 'tracker/dashboard.html', context)
