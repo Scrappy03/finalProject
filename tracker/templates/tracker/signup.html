@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sanctuary | Create Account</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body
+    class="bg-background text-on-background font-body-md text-body-md min-h-dvh flex items-center justify-center px-margin-mobile py-3 md:px-margin-desktop md:py-5">
+    <main class="w-full max-w-[540px]">
+        <div
+            class="login-card bg-surface-container-lowest rounded-xl p-5 md:p-6 border border-outline-variant/30 relative overflow-hidden">
+            <div class="flex flex-col items-center mb-5">
+                <div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center mb-3">
+                    <span class="material-symbols-outlined text-primary text-[28px]"
+                        data-variation-settings="fill">spa</span>
+                </div>
+                <h1 class="font-headline-lg text-headline-lg text-primary mb-1 tracking-tight">Sanctuary</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant text-center px-4">
+                    Create your account and set your first wellbeing targets.
+                </p>
+            </div>
+
+            <form class="space-y-4" method="post">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="rounded-lg border border-error/30 bg-error-container px-4 py-3 text-on-error-container" role="alert">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
+                        <div>
+                            <h2 class="font-label-md text-label-md font-bold">Please check a few details</h2>
+                            <ul class="mt-2 space-y-1 font-label-sm text-label-sm">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                    <li>
+                                        <a class="hover:underline" href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a>
+                                    </li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="group relative">
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                            for="{{ form.full_name.id_for_label }}">Full name</label>
+                        <div
+                            class="input-underlined relative border-b-2 {% if form.full_name.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                            <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
+                            {{ form.full_name }}
+                        </div>
+                    </div>
+
+                    <div class="group relative">
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                            for="{{ form.email.id_for_label }}">Email address</label>
+                        <div
+                            class="input-underlined relative border-b-2 {% if form.email.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                            <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
+                            {{ form.email }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="group relative">
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                            for="{{ form.password1.id_for_label }}">Password</label>
+                        <div
+                            class="input-underlined relative border-b-2 {% if form.password1.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                            <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
+                            {{ form.password1 }}
+                        </div>
+                    </div>
+
+                    <div class="group relative">
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                            for="{{ form.password2.id_for_label }}">Confirm password</label>
+                        <div
+                            class="input-underlined relative border-b-2 {% if form.password2.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                            <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">security</span>
+                            {{ form.password2 }}
+                        </div>
+                    </div>
+                </div>
+
+                <section class="border-t border-outline-variant pt-4 space-y-4">
+                    <div>
+                        <h2 class="font-headline-sm text-headline-sm text-on-surface">Initial goals</h2>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant">You can refine these later.</p>
+                    </div>
+
+                    <div class="group relative">
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                            for="{{ form.wellbeing_focus.id_for_label }}">Main wellbeing focus</label>
+                        <div
+                            class="input-underlined relative border-b-2 {% if form.wellbeing_focus.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                            <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">psychology</span>
+                            {{ form.wellbeing_focus }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="group relative">
+                            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                                for="{{ form.target_bedtime.id_for_label }}">Target bedtime</label>
+                            <div
+                                class="input-underlined relative border-b-2 {% if form.target_bedtime.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                                <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">bedtime</span>
+                                {{ form.target_bedtime }}
+                            </div>
+                        </div>
+
+                        <div class="group relative">
+                            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                                for="{{ form.target_wake_time.id_for_label }}">Target wake time</label>
+                            <div
+                                class="input-underlined relative border-b-2 {% if form.target_wake_time.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                                <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">wb_sunny</span>
+                                {{ form.target_wake_time }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="group relative">
+                            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                                for="{{ form.caffeine_cutoff.id_for_label }}">Caffeine cutoff</label>
+                            <div
+                                class="input-underlined relative border-b-2 {% if form.caffeine_cutoff.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                                <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">coffee</span>
+                                {{ form.caffeine_cutoff }}
+                            </div>
+                        </div>
+
+                        <div class="group relative">
+                            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+                                for="{{ form.weekly_exercise_goal.id_for_label }}">Weekly exercise goal</label>
+                            <div
+                                class="input-underlined relative border-b-2 {% if form.weekly_exercise_goal.errors %}border-error{% else %}border-outline-variant{% endif %} focus-within:border-primary transition-all duration-300 rounded-t-lg">
+                                <span class="material-symbols-outlined absolute left-1 top-1/2 -translate-y-1/2 text-outline text-[20px]">fitness_center</span>
+                                {{ form.weekly_exercise_goal }}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="flex items-start gap-3">
+                    {{ form.accept_terms }}
+                    <label class="font-label-sm text-label-sm text-on-surface-variant leading-tight" for="{{ form.accept_terms.id_for_label }}">
+                        I agree to the <a class="text-primary hover:underline font-semibold" href="#">Terms of Service</a>
+                        and <a class="text-primary hover:underline font-semibold" href="#">Privacy Policy</a>.
+                    </label>
+                </div>
+
+                <button
+                    class="w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg shadow-sm hover:bg-primary-container hover:shadow-md transition-colors duration-200 flex items-center justify-center space-x-2"
+                    type="submit">
+                    <span>Create Account</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </button>
+            </form>
+
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-primary-fixed opacity-10 rounded-full blur-3xl">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-secondary-fixed opacity-10 rounded-full blur-3xl">
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Already have an account?
+                <a class="font-label-md text-label-md text-primary font-bold hover:underline underline-offset-4 decoration-2"
+                    href="{% url 'tracker:login' %}">Sign in</a>
+            </p>
+        </div>
+
+        <div class="mt-5 flex flex-col items-center space-y-2 opacity-60">
+            <div class="flex items-center space-x-4">
+                <div class="h-[1px] w-8 bg-outline-variant"></div>
+                <span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Secure &
+                    Private</span>
+                <div class="h-[1px] w-8 bg-outline-variant"></div>
+            </div>
+            <div class="flex space-x-6">
+                <span class="material-symbols-outlined text-on-surface-variant text-xl">encrypted</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-xl">shield_person</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-xl">lock</span>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(174,206,181,0.28),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(197,231,252,0.3),transparent_32%)]">
+        </div>
+    </div>
+</body>
+
+</html>

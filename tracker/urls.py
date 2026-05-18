@@ -4,6 +4,7 @@ from . import views
 app_name = 'tracker'
 
 urlpatterns = [
+    path('signup/', views.signup, name='signup'),
     path('login/', views.SanctuaryLoginView.as_view(), name='login'),
     path('logout/', views.SanctuaryLogoutView.as_view(), name='logout'),
     path('', views.dashboard, name='dashboard'),

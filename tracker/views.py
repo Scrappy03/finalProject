@@ -1,12 +1,13 @@
 from datetime import time, timedelta
 
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .forms import DailyEntryForm, SanctuaryLoginForm, UserProfileForm
+from .forms import DailyEntryForm, SanctuaryLoginForm, SanctuarySignupForm, UserProfileForm
 from .insights import build_insights_context
 from .models import UserProfile, DailyEntry
 from .utils import clamp_percent
@@ -26,6 +27,29 @@ class SanctuaryLoginView(LoginView):
 
 class SanctuaryLogoutView(LogoutView):
     pass
+
+
+def signup(request):
+    """Create a user account and initial wellbeing targets."""
+    if request.user.is_authenticated:
+        return redirect("tracker:dashboard")
+
+    if request.method == "POST":
+        form = SanctuarySignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("tracker:dashboard")
+    else:
+        form = SanctuarySignupForm(initial={
+            "target_bedtime": time(22, 30),
+            "target_wake_time": time(7, 0),
+            "caffeine_cutoff": time(16, 0),
+            "weekly_exercise_goal": 3,
+            "wellbeing_focus": "sleep",
+        })
+
+    return render(request, "tracker/signup.html", {"form": form})
 
 
 def get_user_profile(user):

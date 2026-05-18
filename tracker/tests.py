@@ -32,6 +32,57 @@ class AuthFlowTests(TestCase):
         self.assertRedirects(response, reverse("tracker:dashboard"))
         self.assertIn("_auth_user_id", self.client.session)
 
+    def test_signup_creates_user_profile_and_logs_user_in(self):
+        response = self.client.post(reverse("tracker:signup"), {
+            "full_name": "New User",
+            "email": "newuser@example.com",
+            "password1": "StrongPass123",
+            "password2": "StrongPass123",
+            "wellbeing_focus": "routine",
+            "target_bedtime": "22:15",
+            "target_wake_time": "06:45",
+            "caffeine_cutoff": "14:30",
+            "weekly_exercise_goal": 4,
+            "accept_terms": "on",
+        })
+
+        self.assertRedirects(response, reverse("tracker:dashboard"))
+        user = get_user_model().objects.get(username="newuser")
+        self.assertEqual(user.email, "newuser@example.com")
+        self.assertEqual(user.first_name, "New")
+        self.assertEqual(user.last_name, "User")
+        self.assertIn("_auth_user_id", self.client.session)
+        profile = UserProfile.objects.get(user=user)
+        self.assertEqual(profile.wellbeing_focus, "routine")
+        self.assertEqual(profile.target_bedtime, time(22, 15))
+        self.assertEqual(profile.target_wake_time, time(6, 45))
+        self.assertEqual(profile.caffeine_cutoff, time(14, 30))
+        self.assertEqual(profile.weekly_exercise_goal, 4)
+
+    def test_signup_rejects_duplicate_email(self):
+        get_user_model().objects.create_user(
+            username="existing",
+            email="newuser@example.com",
+            password="pass12345",
+        )
+
+        response = self.client.post(reverse("tracker:signup"), {
+            "full_name": "New User",
+            "email": "newuser@example.com",
+            "password1": "StrongPass123",
+            "password2": "StrongPass123",
+            "wellbeing_focus": "sleep",
+            "target_bedtime": "22:30",
+            "target_wake_time": "07:00",
+            "caffeine_cutoff": "16:00",
+            "weekly_exercise_goal": 3,
+            "accept_terms": "on",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "An account with this email already exists.")
+        self.assertFalse(get_user_model().objects.filter(username="newuser").exists())
+
 
 class DailyEntryFlowTests(TestCase):
     def setUp(self):
