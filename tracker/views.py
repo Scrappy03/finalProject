@@ -1,10 +1,12 @@
+from datetime import time, timedelta
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.utils import timezone
-from datetime import timedelta
 
-from .forms import DailyEntryForm, SanctuaryLoginForm
+from .forms import DailyEntryForm, SanctuaryLoginForm, UserProfileForm
 from .insights import build_insights_context
 from .models import UserProfile, DailyEntry
 from .utils import clamp_percent
@@ -31,6 +33,18 @@ def get_user_profile(user):
         return UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
         return None
+
+
+def get_or_create_user_profile(user):
+    profile, _ = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            "target_bedtime": time(22, 30),
+            "target_wake_time": time(7, 0),
+            "caffeine_cutoff": time(16, 0),
+        },
+    )
+    return profile
 
 
 def get_energy_label(energy_rating):
@@ -70,6 +84,28 @@ def format_average_time(entries, field_name):
     return f"{hours % 24:02d}:{minutes:02d}"
 
 
+def format_time(value):
+    return value.strftime("%H:%M") if value else "--"
+
+
+def add_minutes(value, minutes_to_add):
+    total_minutes = (value.hour * 60 + value.minute + minutes_to_add) % (24 * 60)
+    hours, minutes = divmod(total_minutes, 60)
+    return time(hours, minutes)
+
+
+def get_daily_streak(user):
+    entry_dates = set(
+        DailyEntry.objects.filter(user=user).values_list("entry_date", flat=True)
+    )
+    streak = 0
+    current_date = timezone.localdate()
+    while current_date in entry_dates:
+        streak += 1
+        current_date -= timedelta(days=1)
+    return streak
+
+
 @login_required
 def dashboard(request):
     """Display the main dashboard with wellbeing overview."""
@@ -105,6 +141,7 @@ def dashboard(request):
     average_energy_rating = 0
     average_mood_rating = 0
     exercise_completed_count = 0
+    weekly_exercise_goal = user_profile.weekly_exercise_goal if user_profile else 3
     if recent_entry_count > 0:
         average_sleep_quality = sum(entry.sleep_quality for entry in recent_entries) / recent_entry_count
         average_energy_rating = sum(entry.energy_rating for entry in recent_entries) / recent_entry_count
@@ -143,6 +180,7 @@ def dashboard(request):
         'average_energy_rating': average_energy_rating,
         'average_mood_rating': average_mood_rating,
         'exercise_completed_count': exercise_completed_count,
+        'weekly_exercise_goal': weekly_exercise_goal,
         'average_wake_time': average_wake_time,
         'energy_label': energy_label,
         'mood_label': mood_label,
@@ -184,6 +222,44 @@ def insights(request):
     user_profile = get_user_profile(request.user)
     context = build_insights_context(request.user, user_profile)
     return render(request, 'tracker/insights.html', context)
+
+
+@login_required
+def goals(request):
+    """Let users refine their wellbeing targets."""
+    user_profile = get_or_create_user_profile(request.user)
+
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your goals have been updated.")
+            return redirect("tracker:goals")
+    else:
+        form = UserProfileForm(instance=user_profile)
+
+    cognitive_peak_start = add_minutes(user_profile.target_wake_time, 120)
+    cognitive_peak_end = add_minutes(user_profile.target_wake_time, 270)
+    caffeine_buffer_hours = (
+        (user_profile.target_bedtime.hour * 60 + user_profile.target_bedtime.minute)
+        - (user_profile.caffeine_cutoff.hour * 60 + user_profile.caffeine_cutoff.minute)
+    ) / 60
+    if caffeine_buffer_hours < 0:
+        caffeine_buffer_hours += 24
+
+    context = {
+        "form": form,
+        "user_profile": user_profile,
+        "daily_streak": get_daily_streak(request.user),
+        "focus_label": user_profile.get_wellbeing_focus_display(),
+        "target_bedtime": format_time(user_profile.target_bedtime),
+        "target_wake_time": format_time(user_profile.target_wake_time),
+        "caffeine_cutoff": format_time(user_profile.caffeine_cutoff),
+        "cognitive_peak_start": format_time(cognitive_peak_start),
+        "cognitive_peak_end": format_time(cognitive_peak_end),
+        "caffeine_buffer_hours": caffeine_buffer_hours,
+    }
+    return render(request, "tracker/goals.html", context)
 
 
 @login_required

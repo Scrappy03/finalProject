@@ -9,5 +9,6 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('entries/new/', views.entry_create, name='entry_create'),
     path('insights/', views.insights, name='insights'),
+    path('goals/', views.goals, name='goals'),
     path('report/', views.report, name='report'),
 ]

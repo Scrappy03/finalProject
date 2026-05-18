@@ -124,11 +124,7 @@
         </div>
         <p class="font-label-md text-label-md text-on-surface-variant mb-1">Exercise Days</p>
         <p class="font-headline-md text-headline-md text-on-surface">
-            {% if recent_entry_count %}
-            {{ exercise_completed_count }}/{{ recent_entry_count }}
-            {% else %}
-            --
-            {% endif %}
+            {{ exercise_completed_count }}/{{ weekly_exercise_goal }}
         </p>
         {% if exercise_completed_count %}
         <div class="mt-4 flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded text-[10px] font-bold">
@@ -209,7 +205,7 @@
                 {% else %}
                 <h4 class="font-headline-sm text-headline-sm text-on-surface">Exercise and routine sign</h4>
                 <p class="font-body-md text-body-md text-on-surface-variant">You logged exercise on
-                    {{ exercise_completed_count }} of your last {{ recent_entry_count }} tracked days. Compare this with your
+                    {{ exercise_completed_count }} of your {{ weekly_exercise_goal }} target days. Compare this with your
                     energy and mood scores over time.</p>
                 {% endif %}
             </div>
