@@ -10,6 +10,7 @@ from django.utils import timezone
 from .forms import DailyEntryForm, SanctuaryLoginForm, SanctuarySignupForm, UserProfileForm
 from .insights import build_insights_context
 from .models import UserProfile, DailyEntry
+from .trends import build_trends_context
 from .utils import clamp_percent
 
 
@@ -303,6 +304,13 @@ def insights(request):
     user_profile = get_user_profile(request.user)
     context = build_insights_context(request.user, user_profile)
     return render(request, 'tracker/insights.html', context)
+
+
+@login_required
+def trends(request):
+    """Display wellbeing trends over time."""
+    context = build_trends_context(request.user, request.GET.get("range"))
+    return render(request, "tracker/trends.html", context)
 
 
 @login_required

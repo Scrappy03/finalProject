@@ -259,3 +259,51 @@ class GoalsFlowTests(TestCase):
         self.assertEqual(profile.target_wake_time, time(6, 45))
         self.assertEqual(profile.caffeine_cutoff, time(14, 30))
         self.assertEqual(profile.weekly_exercise_goal, 4)
+
+
+class TrendsFlowTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="trenduser",
+            password="pass12345",
+        )
+
+    def test_trends_redirects_anonymous_users_to_login(self):
+        response = self.client.get(reverse("tracker:trends"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('tracker:login')}?next={reverse('tracker:trends')}",
+        )
+
+    def test_trends_page_uses_logged_entries(self):
+        self.client.force_login(self.user)
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=timezone.localdate(),
+            bedtime="22:30",
+            wake_time="06:30",
+            sleep_quality=8,
+            evening_screen_time="under_30",
+            exercise_completed=True,
+            energy_rating=7,
+            mood_rating=9,
+        )
+
+        response = self.client.get(reverse("tracker:trends"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_range"], 7)
+        self.assertEqual(response.context["entry_count"], 1)
+        self.assertEqual(response.context["average_sleep_duration_label"], "8h 00m")
+        self.assertEqual(response.context["exercise_count"], 1)
+        self.assertAlmostEqual(response.context["logging_completion_percent"], 14.3, places=1)
+        self.assertContains(response, "Wellbeing Trends")
+
+    def test_trends_page_accepts_supported_range(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(f"{reverse('tracker:trends')}?range=14")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_range"], 14)
