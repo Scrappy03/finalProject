@@ -1,0 +1,307 @@
+{% load static %}
+<!doctype html>
+<html class="scroll-smooth" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sanctuary | Wellbeing Tracker</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body
+    class="bg-background text-on-background min-h-screen font-body-md antialiased"
+  >
+    <nav
+      class="sticky top-0 z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant"
+    >
+      <div
+        class="max-w-[1200px] mx-auto h-20 px-margin-mobile md:px-margin-desktop grid grid-cols-3 items-center gap-6"
+      >
+        <a
+          class="font-headline-md text-headline-md font-bold text-primary"
+          href="{% url 'tracker:landing' %}"
+        >
+          Sanctuary
+        </a>
+
+        <div class="hidden md:flex items-center justify-center gap-8">
+          <a
+            class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            href="#features"
+            >Features</a
+          >
+          <a
+            class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            href="#benefits"
+            >Benefits</a
+          >
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+          <a
+            class="font-label-md text-label-md text-on-surface hover:text-primary transition-colors"
+            href="{% url 'tracker:login' %}"
+          >
+            Sign In
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <section
+        class="relative min-h-[calc(100vh-5rem)] flex items-center justify-center px-margin-mobile md:px-margin-desktop pt-12 pb-28 overflow-hidden bg-background"
+      >
+        <img
+          class="absolute inset-0 h-full w-full object-cover object-center"
+          src="{% static 'Images/daniil-silantev-Qn0xoIfdM4I-unsplash.jpg' %}"
+          alt=""
+          aria-hidden="true"
+          style="opacity: 0.4; filter: grayscale(35%) sepia(12%) saturate(85%)"
+        />
+        <div class="absolute inset-0 bg-background/78"></div>
+
+        <div class="relative z-10 max-w-[900px] mx-auto w-full text-center">
+          <h1
+            class="font-display-lg text-display-lg text-on-surface max-w-3xl mx-auto mb-6"
+          >
+            Track your wellbeing. Understand your patterns.
+          </h1>
+          <p
+            class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10"
+          >
+            Sanctuary helps you log sleep, mood, energy, caffeine, exercise, and
+            screen habits so your daily choices become easier to see and easier
+            to improve.
+          </p>
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a
+              class="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-sm hover:bg-primary-container transition-colors"
+              href="{% url 'tracker:signup' %}"
+            >
+              Create Your Account
+              <span
+                class="material-symbols-outlined text-[20px]"
+                data-icon="arrow_forward"
+                >arrow_forward</span
+              >
+            </a>
+            <a
+              class="inline-flex items-center justify-center border border-outline-variant text-on-surface px-8 py-4 rounded-xl font-label-md text-label-md hover:bg-surface-container-low transition-colors"
+              href="{% url 'tracker:login' %}"
+            >
+              I Already Have an Account
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="bg-surface-container-low px-margin-mobile md:px-margin-desktop py-24"
+        id="features"
+      >
+        <div class="max-w-[1200px] mx-auto">
+          <div class="max-w-2xl mb-12">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">
+              Built for daily clarity
+            </h2>
+            <p class="font-body-lg text-body-lg text-on-surface-variant">
+              Focused tools for recording your routine and seeing what changes
+              over time.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+            <article
+              class="bg-surface-container-lowest border border-outline-variant p-8 rounded-3xl shadow-sm"
+            >
+              <div
+                class="w-14 h-14 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center mb-6"
+              >
+                <span
+                  class="material-symbols-outlined"
+                  data-icon="edit_calendar"
+                  >edit_calendar</span
+                >
+              </div>
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-3"
+              >
+                Daily Entries
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Log the habits that shape your wellbeing without turning
+                reflection into admin.
+              </p>
+            </article>
+
+            <article
+              class="bg-surface-container-lowest border border-outline-variant p-8 rounded-3xl shadow-sm"
+            >
+              <div
+                class="w-14 h-14 rounded-2xl bg-secondary-container text-on-secondary-container flex items-center justify-center mb-6"
+              >
+                <span class="material-symbols-outlined" data-icon="query_stats"
+                  >query_stats</span
+                >
+              </div>
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-3"
+              >
+                Trends
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Compare sleep, mood, energy, exercise, and screen time across
+                meaningful date ranges.
+              </p>
+            </article>
+
+            <article
+              class="bg-surface-container-lowest border border-outline-variant p-8 rounded-3xl shadow-sm"
+            >
+              <div
+                class="w-14 h-14 rounded-2xl bg-tertiary-fixed text-tertiary flex items-center justify-center mb-6"
+              >
+                <span class="material-symbols-outlined" data-icon="lightbulb"
+                  >lightbulb</span
+                >
+              </div>
+              <h3
+                class="font-headline-sm text-headline-sm text-on-surface mb-3"
+              >
+                Insights
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Turn logged patterns into practical prompts for the next small
+                adjustment.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="px-margin-mobile md:px-margin-desktop py-24"
+        id="benefits"
+      >
+        <div
+          class="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start"
+        >
+          <div class="lg:col-span-5">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">
+              Small logs, better decisions.
+            </h2>
+            <p class="font-body-lg text-body-lg text-on-surface-variant">
+              Sanctuary is designed for the quiet work of noticing patterns:
+              what helps you sleep, what drains energy, and what routines are
+              worth keeping.
+            </p>
+          </div>
+          <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+            <div
+              class="bg-surface-container-low border border-outline-variant rounded-2xl p-6"
+            >
+              <span
+                class="material-symbols-outlined text-primary mb-4"
+                data-icon="bedtime"
+                >bedtime</span
+              >
+              <h3 class="font-headline-sm text-headline-sm mb-2">
+                Protect sleep rhythm
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Track bedtime, wake time, and sleep quality together.
+              </p>
+            </div>
+            <div
+              class="bg-surface-container-low border border-outline-variant rounded-2xl p-6"
+            >
+              <span
+                class="material-symbols-outlined text-secondary mb-4"
+                data-icon="bolt"
+                >bolt</span
+              >
+              <h3 class="font-headline-sm text-headline-sm mb-2">
+                Spot energy patterns
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                See how habits line up with energy and mood ratings.
+              </p>
+            </div>
+            <div
+              class="bg-surface-container-low border border-outline-variant rounded-2xl p-6"
+            >
+              <span
+                class="material-symbols-outlined text-tertiary mb-4"
+                data-icon="local_cafe"
+                >local_cafe</span
+              >
+              <h3 class="font-headline-sm text-headline-sm mb-2">
+                Understand caffeine timing
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Record caffeine use and compare it with sleep outcomes.
+              </p>
+            </div>
+            <div
+              class="bg-surface-container-low border border-outline-variant rounded-2xl p-6"
+            >
+              <span
+                class="material-symbols-outlined text-primary mb-4"
+                data-icon="track_changes"
+                >track_changes</span
+              >
+              <h3 class="font-headline-sm text-headline-sm mb-2">
+                Set realistic goals
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Adjust targets as your routine becomes clearer.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer
+      class="bg-surface-container-low border-t border-outline-variant px-margin-mobile md:px-margin-desktop py-10"
+    >
+      <div
+        class="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4"
+      >
+        <p class="font-headline-sm text-headline-sm text-primary">Sanctuary</p>
+        <div class="flex items-center gap-6">
+          <a
+            class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            href="{% url 'tracker:login' %}"
+            >Sign In</a
+          >
+          <a
+            class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            href="{% url 'tracker:signup' %}"
+            >Sign Up</a
+          >
+        </div>
+      </div>
+    </footer>
+    <script>
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+
+      window.addEventListener("pageshow", () => {
+        if (!window.location.hash) {
+          window.requestAnimationFrame(() => window.scrollTo(0, 0));
+        }
+      });
+    </script>
+  </body>
+</html>

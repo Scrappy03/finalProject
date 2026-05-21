@@ -9,6 +9,25 @@ from .models import DailyEntry, UserProfile
 
 
 class AuthFlowTests(TestCase):
+    def test_landing_page_is_public(self):
+        response = self.client.get(reverse("tracker:landing"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Track your wellbeing")
+        self.assertContains(response, reverse("tracker:signup"))
+        self.assertContains(response, reverse("tracker:login"))
+
+    def test_landing_redirects_authenticated_users_to_dashboard(self):
+        user = get_user_model().objects.create_user(
+            username="returning",
+            password="pass12345",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("tracker:landing"))
+
+        self.assertRedirects(response, reverse("tracker:dashboard"))
+
     def test_dashboard_redirects_anonymous_users_to_login(self):
         response = self.client.get(reverse("tracker:dashboard"))
 

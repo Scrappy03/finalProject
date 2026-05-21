@@ -38,6 +38,13 @@ class SanctuaryLogoutView(LogoutView):
     pass
 
 
+def landing(request):
+    """Display the public product landing page before authentication."""
+    if request.user.is_authenticated:
+        return redirect("tracker:dashboard")
+    return render(request, "tracker/landing.html")
+
+
 def signup(request):
     """Create a user account and initial wellbeing targets."""
     if request.user.is_authenticated:
