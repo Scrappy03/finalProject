@@ -261,6 +261,113 @@ class GoalsFlowTests(TestCase):
         self.assertEqual(profile.weekly_exercise_goal, 4)
 
 
+class SettingsFlowTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="settingsuser",
+            email="settings@example.com",
+            password="OldPass123",
+            first_name="Settings",
+            last_name="User",
+        )
+
+    def test_settings_redirects_anonymous_users_to_login(self):
+        response = self.client.get(reverse("tracker:settings"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('tracker:login')}?next={reverse('tracker:settings')}",
+        )
+
+    def test_settings_page_displays_logged_in_account(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("tracker:settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Settings User")
+        self.assertContains(response, "settings@example.com")
+
+    def test_settings_updates_account_details(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("tracker:settings"), {
+            "form_type": "account",
+            "full_name": "Updated Person",
+            "email": "updated@example.com",
+            "username": "updateduser",
+        })
+
+        self.assertRedirects(response, reverse("tracker:settings"))
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Updated")
+        self.assertEqual(self.user.last_name, "Person")
+        self.assertEqual(self.user.email, "updated@example.com")
+        self.assertEqual(self.user.username, "updateduser")
+
+    def test_settings_changes_password_and_keeps_user_logged_in(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("tracker:settings"), {
+            "form_type": "password",
+            "old_password": "OldPass123",
+            "new_password1": "NewPass456",
+            "new_password2": "NewPass456",
+        })
+
+        self.assertRedirects(response, reverse("tracker:settings"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("NewPass456"))
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_settings_rejects_account_deletion_with_wrong_password(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("tracker:settings"), {
+            "form_type": "delete",
+            "password": "WrongPass123",
+            "confirmation": "DELETE",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Enter your current password.")
+        self.assertTrue(get_user_model().objects.filter(pk=self.user.pk).exists())
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_settings_deletes_account_and_related_wellbeing_data(self):
+        UserProfile.objects.create(
+            user=self.user,
+            target_bedtime="22:30",
+            target_wake_time="07:00",
+            caffeine_cutoff="16:00",
+            weekly_exercise_goal=3,
+            wellbeing_focus="sleep",
+        )
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=timezone.localdate(),
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            energy_rating=7,
+            mood_rating=8,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("tracker:settings"), {
+            "form_type": "delete",
+            "password": "OldPass123",
+            "confirmation": "DELETE",
+        })
+
+        self.assertRedirects(response, reverse("tracker:login"))
+        self.assertFalse(get_user_model().objects.filter(pk=self.user.pk).exists())
+        self.assertFalse(UserProfile.objects.filter(user_id=self.user.pk).exists())
+        self.assertFalse(DailyEntry.objects.filter(user_id=self.user.pk).exists())
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+
 class TrendsFlowTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(

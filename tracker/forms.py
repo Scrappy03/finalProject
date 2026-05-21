@@ -2,9 +2,130 @@ from datetime import time
 
 from django import forms
 from django.contrib.auth import get_user_model, password_validation
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 
 from .models import DailyEntry, UserProfile
+
+
+class AccountSettingsForm(forms.ModelForm):
+    full_name = forms.CharField(
+        label="Full name",
+        required=False,
+        widget=forms.TextInput(attrs={
+            "autocomplete": "name",
+            "placeholder": "Enter your name",
+        }),
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = ["full_name", "email", "username"]
+        widgets = {
+            "email": forms.EmailInput(attrs={
+                "autocomplete": "email",
+                "placeholder": "name@example.com",
+            }),
+            "username": forms.TextInput(attrs={
+                "autocomplete": "username",
+                "placeholder": "Username",
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields["full_name"].initial = self.instance.get_full_name()
+
+        field_class = (
+            "w-full bg-transparent border-0 border-b border-outline-variant/50 "
+            "focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md "
+            "text-on-surface transition-colors focus:bg-surface-container-low "
+            "focus:px-4 rounded-t-md"
+        )
+        for field in self.fields.values():
+            field.widget.attrs["class"] = field_class
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        user_model = get_user_model()
+        if user_model.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        user_model = get_user_model()
+        if user_model.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This username is already taken.")
+        return username
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        full_name_parts = self.cleaned_data.get("full_name", "").split()
+        user.first_name = full_name_parts[0] if full_name_parts else ""
+        user.last_name = " ".join(full_name_parts[1:])
+        if commit:
+            user.save()
+        return user
+
+
+class SanctuaryPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field_class = (
+            "w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/30 "
+            "focus:border-primary focus:ring-0 px-4 py-3 font-body-md text-body-md "
+            "text-on-surface rounded-t-lg transition-colors"
+        )
+        placeholders = {
+            "old_password": "Current password",
+            "new_password1": "Enter new password",
+            "new_password2": "Confirm new password",
+        }
+        for name, field in self.fields.items():
+            field.widget.attrs["class"] = field_class
+            field.widget.attrs["placeholder"] = placeholders.get(name, "")
+
+
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(
+        label="Current password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            "autocomplete": "current-password",
+            "placeholder": "Current password",
+        }),
+    )
+    confirmation = forms.CharField(
+        label='Type "DELETE"',
+        widget=forms.TextInput(attrs={
+            "autocomplete": "off",
+            "placeholder": "DELETE",
+        }),
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        field_class = (
+            "w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/30 "
+            "focus:border-error focus:ring-0 px-4 py-3 font-body-md text-body-md "
+            "text-on-surface rounded-t-xl transition-colors"
+        )
+        for field in self.fields.values():
+            field.widget.attrs["class"] = field_class
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        if not self.user.check_password(password):
+            raise forms.ValidationError("Enter your current password.")
+        return password
+
+    def clean_confirmation(self):
+        confirmation = self.cleaned_data["confirmation"]
+        if confirmation != "DELETE":
+            raise forms.ValidationError('Type "DELETE" to confirm account deletion.')
+        return confirmation
 
 
 class SanctuaryLoginForm(AuthenticationForm):

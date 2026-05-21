@@ -1,13 +1,21 @@
 from datetime import time, timedelta
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .forms import DailyEntryForm, SanctuaryLoginForm, SanctuarySignupForm, UserProfileForm
+from .forms import (
+    AccountSettingsForm,
+    DailyEntryForm,
+    DeleteAccountForm,
+    SanctuaryLoginForm,
+    SanctuaryPasswordChangeForm,
+    SanctuarySignupForm,
+    UserProfileForm,
+)
 from .insights import build_insights_context
 from .models import UserProfile, DailyEntry
 from .trends import build_trends_context
@@ -349,6 +357,49 @@ def goals(request):
         "caffeine_buffer_hours": caffeine_buffer_hours,
     }
     return render(request, "tracker/goals.html", context)
+
+
+@login_required
+def settings(request):
+    """Let users manage account details and password security."""
+    account_form = AccountSettingsForm(instance=request.user)
+    delete_form = DeleteAccountForm(request.user)
+    password_form = SanctuaryPasswordChangeForm(request.user)
+
+    if request.method == "POST":
+        form_type = request.POST.get("form_type")
+
+        if form_type == "account":
+            account_form = AccountSettingsForm(request.POST, instance=request.user)
+            if account_form.is_valid():
+                account_form.save()
+                messages.success(request, "Your account details have been updated.")
+                return redirect("tracker:settings")
+
+        if form_type == "password":
+            password_form = SanctuaryPasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, "Your password has been updated.")
+                return redirect("tracker:settings")
+
+        if form_type == "delete":
+            delete_form = DeleteAccountForm(request.user, request.POST)
+            if delete_form.is_valid():
+                user = request.user
+                logout(request)
+                user.delete()
+                messages.success(request, "Your account and wellbeing data have been deleted.")
+                return redirect("tracker:login")
+
+    context = {
+        "account_form": account_form,
+        "delete_form": delete_form,
+        "password_form": password_form,
+        "last_login": request.user.last_login,
+    }
+    return render(request, "tracker/settings.html", context)
 
 
 @login_required

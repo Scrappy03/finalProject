@@ -54,6 +54,12 @@
                 <span class="material-symbols-outlined" data-icon="flag"{% if request.resolver_match.url_name == 'goals' %} data-variation-settings="filled"{% endif %}>flag</span>
                 <span class="font-label-md text-label-md">Goals</span>
             </a>
+            <!-- Settings -->
+            <a class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'settings' %}bg-secondary-container text-on-secondary-container rounded-lg font-semibold translate-x-1{% else %}text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg{% endif %} transition-all duration-200"
+                href="{% url 'tracker:settings' %}">
+                <span class="material-symbols-outlined" data-icon="settings"{% if request.resolver_match.url_name == 'settings' %} data-variation-settings="filled"{% endif %}>settings</span>
+                <span class="font-label-md text-label-md">Settings</span>
+            </a>
         </nav>
         <div class="px-4 py-6 mt-auto border-t border-outline-variant space-y-4">
             <a href="{% url 'tracker:entry_create' %}"
@@ -86,28 +92,8 @@
             class="flex justify-between items-center h-16 px-margin-desktop mx-6 w-auto border-b border-outline-variant bg-transparent">
             <div class="flex items-center gap-4">
                 <h2 class="font-headline-sm text-headline-sm font-bold text-primary">{% block page_title %}Sanctuary{% endblock %}</h2>
-                <div class="relative hidden lg:block">
-                    <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-                        data-icon="search">search</span>
-                    <input
-                        class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-label-md focus:ring-2 focus:ring-primary/20 w-64"
-                        placeholder="Search patterns..." type="text" />
-                </div>
             </div>
             <div class="flex items-center gap-6">
-                <div class="flex items-center gap-4">
-                    <button
-                        class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors relative">
-                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                        <span
-                            class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
-                    </button>
-                    <button
-                        class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors">
-                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                    </button>
-                </div>
                 <div
                     class="h-8 w-8 rounded-full border border-outline-variant bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm text-label-sm font-bold">
                     {% if user.first_name %}
@@ -127,6 +113,18 @@
         </div>
 
     </main>
+
+    <script>
+        if ("scrollRestoration" in window.history) {
+            window.history.scrollRestoration = "manual";
+        }
+
+        window.addEventListener("pageshow", () => {
+            if (!window.location.hash) {
+                window.requestAnimationFrame(() => window.scrollTo(0, 0));
+            }
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
