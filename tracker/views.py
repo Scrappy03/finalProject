@@ -407,9 +407,3 @@ def settings(request):
         "last_login": request.user.last_login,
     }
     return render(request, "tracker/settings.html", context)
-
-
-@login_required
-def report(request):
-    """Display the wellbeing report page."""
-    return render(request, 'tracker/report.html')

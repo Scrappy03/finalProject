@@ -53,12 +53,8 @@
                     </div>
 
                     <div class="group relative">
-                        <div class="flex justify-between items-end mb-2">
-                            <label class="font-label-md text-label-md text-on-surface-variant block"
-                                for="{{ form.password.id_for_label }}">Password</label>
-                            <a class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors duration-200"
-                                href="#">Forgot password?</a>
-                        </div>
+                        <label class="font-label-md text-label-md text-on-surface-variant mb-2 block"
+                            for="{{ form.password.id_for_label }}">Password</label>
                         <div
                             class="input-underlined relative border-b-2 border-outline-variant focus-within:border-primary transition-all duration-300 rounded-t-lg">
                             {{ form.password }}
