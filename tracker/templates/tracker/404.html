@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Page Not Found - Sanctuary</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="bg-background text-on-background min-h-dvh font-body-md antialiased flex flex-col">
+    <header class="w-full border-b border-outline-variant bg-surface/90 backdrop-blur-md">
+        <div class="max-w-[1200px] mx-auto h-20 px-margin-mobile md:px-margin-desktop flex items-center justify-between">
+            <a class="font-headline-md text-headline-md font-bold text-primary" href="{% url 'tracker:landing' %}">
+                Sanctuary
+            </a>
+        </div>
+    </header>
+
+    <main class="relative flex-1 flex items-center justify-center overflow-hidden px-margin-mobile md:px-margin-desktop py-16">
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-primary-fixed/40 blur-[120px]"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-secondary-fixed/40 blur-[120px]"></div>
+        </div>
+
+        <section class="relative z-10 max-w-[720px] mx-auto text-center">
+            <h1 class="font-display-lg text-[156px] md:text-[220px] leading-none font-bold text-primary select-none mb-6">
+                404
+            </h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-10">
+                We couldn't find the page you were looking for, but you can return to your wellbeing dashboard.
+            </p>
+            <a class="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-sm hover:bg-primary-container transition-colors"
+                href="{% url 'tracker:dashboard' %}">
+                Return to Dashboard
+                <span class="material-symbols-outlined text-[20px]" data-icon="arrow_forward">arrow_forward</span>
+            </a>
+        </section>
+    </main>
+</body>
+
+</html>

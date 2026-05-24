@@ -5,6 +5,7 @@ __pycache__/
 
 # Django/local data
 db.sqlite3
+staticfiles/
 
 # Virtual environments
 venv/
@@ -17,4 +18,3 @@ node_modules/
 .DS_Store
 .vscode/
 .idea/
-

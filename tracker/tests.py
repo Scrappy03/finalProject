@@ -1,7 +1,7 @@
 from datetime import time
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -27,6 +27,14 @@ class AuthFlowTests(TestCase):
         response = self.client.get(reverse("tracker:landing"))
 
         self.assertRedirects(response, reverse("tracker:dashboard"))
+
+    @override_settings(DEBUG=False, ALLOWED_HOSTS=["testserver"])
+    def test_custom_404_page_renders_for_unknown_url(self):
+        response = self.client.get("/missing-page/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "404", status_code=404)
+        self.assertContains(response, reverse("tracker:dashboard"), status_code=404)
 
     def test_dashboard_redirects_anonymous_users_to_login(self):
         response = self.client.get(reverse("tracker:dashboard"))
@@ -131,6 +139,86 @@ class DailyEntryFlowTests(TestCase):
         self.assertEqual(entry.sleep_quality, 8)
         self.assertEqual(entry.energy_rating, 7)
         self.assertEqual(entry.mood_rating, 8)
+
+    def test_entry_history_lists_logged_entries(self):
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=timezone.localdate(),
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            energy_rating=7,
+            mood_rating=8,
+        )
+
+        response = self.client.get(reverse("tracker:entry_history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Entry History")
+        self.assertContains(response, "8/10")
+        self.assertEqual(response.context["entry_count"], 1)
+
+    def test_entry_history_paginates_entries(self):
+        for days_ago in range(11):
+            DailyEntry.objects.create(
+                user=self.user,
+                entry_date=timezone.localdate() - timezone.timedelta(days=days_ago),
+                bedtime="22:30",
+                wake_time="07:00",
+                sleep_quality=8,
+                evening_screen_time="30_60",
+                energy_rating=7,
+                mood_rating=8,
+            )
+
+        response = self.client.get(reverse("tracker:entry_history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["page_obj"].object_list), 10)
+        self.assertTrue(response.context["page_obj"].has_next())
+
+    def test_entry_edit_updates_existing_entry(self):
+        entry = DailyEntry.objects.create(
+            user=self.user,
+            entry_date=timezone.localdate(),
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            energy_rating=7,
+            mood_rating=8,
+        )
+        updated_data = self.valid_entry_data()
+        updated_data["sleep_quality"] = 5
+        updated_data["energy_rating"] = 6
+
+        response = self.client.post(reverse("tracker:entry_edit", args=[entry.id]), updated_data)
+
+        self.assertRedirects(response, reverse("tracker:entry_history"))
+        entry.refresh_from_db()
+        self.assertEqual(entry.sleep_quality, 5)
+        self.assertEqual(entry.energy_rating, 6)
+
+    def test_entry_edit_cannot_access_another_users_entry(self):
+        other_user = get_user_model().objects.create_user(
+            username="otheruser",
+            password="pass12345",
+        )
+        entry = DailyEntry.objects.create(
+            user=other_user,
+            entry_date=timezone.localdate(),
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            energy_rating=7,
+            mood_rating=8,
+        )
+
+        response = self.client.get(reverse("tracker:entry_edit", args=[entry.id]))
+
+        self.assertEqual(response.status_code, 404)
 
     def test_dashboard_uses_saved_daily_entries(self):
         DailyEntry.objects.create(

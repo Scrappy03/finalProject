@@ -1,17 +1,16 @@
 {% extends 'tracker/base.html' %}
 
-{% block title %}Log Entry - Sanctuary{% endblock %}
+{% block title %}{{ page_heading|default:"Log Entry" }} - Sanctuary{% endblock %}
 
-{% block page_title %}Log Entry{% endblock %}
+{% block page_title %}Entries{% endblock %}
 
 {% block content %}
 <div class="max-w-[1000px] w-full space-y-12 pb-16">
     <div>
         <p class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-3">Daily Log</p>
-        <h1 class="font-display-lg text-display-lg text-primary mb-3">How was your day?</h1>
+        <h1 class="font-display-lg text-display-lg text-primary mb-3">{{ page_heading|default:"How was your day?" }}</h1>
         <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-            Reflect on your habits and state of being. Each entry feeds your dashboard with better sleep, energy, mood,
-            and routine patterns.
+            {{ page_intro|default:"Reflect on your habits and state of being. Each entry feeds your dashboard with better sleep, energy, mood, and routine patterns." }}
         </p>
     </div>
 
@@ -157,25 +156,25 @@
                     <label class="font-label-md text-label-md text-on-surface-variant mb-6 uppercase tracking-wider">Current Mood</label>
                     {{ form.mood_rating }}
                     <div class="grid grid-cols-5 gap-2" data-mood-picker>
-                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="2">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-error transition-colors">sentiment_very_dissatisfied</span>
-                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-error">LOW</span>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 border border-transparent hover:bg-surface-container-low transition-colors" type="button" data-mood-value="2">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant transition-none">sentiment_very_dissatisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant transition-none">LOW</span>
                         </button>
-                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="4">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-tertiary transition-colors">sentiment_dissatisfied</span>
-                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-tertiary">BLAH</span>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 border border-transparent hover:bg-surface-container-low transition-colors" type="button" data-mood-value="4">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant transition-none">sentiment_dissatisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant transition-none">BLAH</span>
                         </button>
-                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="6">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-primary transition-colors">sentiment_neutral</span>
-                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary">OKAY</span>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 border border-transparent hover:bg-surface-container-low transition-colors" type="button" data-mood-value="6">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant transition-none">sentiment_neutral</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant transition-none">OKAY</span>
                         </button>
-                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="8">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-secondary transition-colors">sentiment_satisfied</span>
-                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-secondary">GOOD</span>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 border border-transparent hover:bg-surface-container-low transition-colors" type="button" data-mood-value="8">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant transition-none">sentiment_satisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant transition-none">GOOD</span>
                         </button>
-                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 group border border-transparent" type="button" data-mood-value="10">
-                            <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-primary transition-colors">sentiment_very_satisfied</span>
-                            <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary">GREAT</span>
+                        <button class="mood-option rounded-xl px-2 py-3 flex flex-col items-center gap-1 border border-transparent hover:bg-surface-container-low transition-colors" type="button" data-mood-value="10">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant transition-none">sentiment_very_satisfied</span>
+                            <span class="text-[10px] font-bold text-on-surface-variant transition-none">GREAT</span>
                         </button>
                     </div>
                     {{ form.mood_rating.errors }}
@@ -192,13 +191,13 @@
         </section>
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-4">
-            <a href="{% url 'tracker:dashboard' %}"
+            <a href="{% url cancel_url|default:'tracker:dashboard' %}"
                 class="inline-flex items-center justify-center px-8 py-3 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/5 transition-colors">
                 Cancel
             </a>
             <button class="inline-flex items-center justify-center gap-2 px-12 py-3 rounded-lg bg-primary text-on-primary font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors" type="submit">
                 <span class="material-symbols-outlined text-sm">save</span>
-                Save Entry
+                {{ submit_label|default:"Save Entry" }}
             </button>
         </div>
     </form>
@@ -267,14 +266,13 @@
         moodInput.value = value;
         moodButtons.forEach((button) => {
             const isActive = button.dataset.moodValue === String(value);
-            button.classList.toggle('bg-primary-container', isActive);
+            button.classList.toggle('bg-surface-container-low', isActive);
             button.classList.toggle('border-primary', isActive);
             button.classList.toggle('shadow-sm', isActive);
             button.querySelectorAll('span').forEach((span) => {
-                span.classList.toggle('text-on-primary-container', isActive);
+                span.classList.toggle('text-primary', isActive);
                 span.classList.toggle('text-on-surface-variant', !isActive);
             });
-            button.querySelector('.material-symbols-outlined')?.toggleAttribute('data-variation-settings', isActive);
         });
     }
 

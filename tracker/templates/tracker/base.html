@@ -36,6 +36,12 @@
                 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                 <span class="font-label-md text-label-md">Dashboard</span>
             </a>
+            <!-- Entries -->
+            <a class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'entry_history' or request.resolver_match.url_name == 'entry_edit' or request.resolver_match.url_name == 'entry_create' %}bg-secondary-container text-on-secondary-container rounded-lg font-semibold{% else %}text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg{% endif %} transition-all duration-200"
+                href="{% url 'tracker:entry_history' %}">
+                <span class="material-symbols-outlined" data-icon="calendar_month"{% if request.resolver_match.url_name == 'entry_history' or request.resolver_match.url_name == 'entry_edit' or request.resolver_match.url_name == 'entry_create' %} data-variation-settings="filled"{% endif %}>calendar_month</span>
+                <span class="font-label-md text-label-md">Entries</span>
+            </a>
             <!-- Trends -->
             <a class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'trends' %}bg-secondary-container text-on-secondary-container rounded-lg font-semibold{% else %}text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg{% endif %} transition-all duration-200"
                 href="{% url 'tracker:trends' %}">

@@ -1,0 +1,154 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Entries - Sanctuary{% endblock %}
+
+{% block page_title %}Entries{% endblock %}
+
+{% block content %}
+<section class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+    <div>
+        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Entry History</h3>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+            Review and edit the wellbeing logs that power your dashboard, trends, and insights.
+        </p>
+        <p class="mt-3 font-label-md text-label-md text-on-surface-variant">
+            {{ entry_count }} logged entr{{ entry_count|pluralize:"y,ies" }}
+        </p>
+    </div>
+    <a href="{% url 'tracker:entry_create' %}"
+        class="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-sm hover:bg-primary-container transition-colors">
+        <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+        New Entry
+    </a>
+</section>
+
+{% if messages %}
+<div class="fixed top-6 right-6 z-[60] space-y-3" data-toast-stack>
+    {% for message in messages %}
+    <div class="flex items-center gap-3 rounded-xl border border-primary/20 bg-surface-container-lowest px-5 py-4 text-on-surface shadow-lg transition-all duration-500"
+        data-toast>
+        <span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+        <p class="font-label-md text-label-md">{{ message }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if page_obj.object_list %}
+<section class="bg-surface-container-lowest border border-outline-variant rounded-3xl overflow-hidden shadow-sm">
+    <div class="hidden lg:grid grid-cols-[1.2fr_repeat(5,1fr)_auto] gap-4 px-6 py-4 bg-surface-container-low border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+        <span>Date</span>
+        <span>Sleep</span>
+        <span>Energy</span>
+        <span>Mood</span>
+        <span>Exercise</span>
+        <span>Caffeine</span>
+        <span class="text-right">Action</span>
+    </div>
+
+    <div class="divide-y divide-outline-variant/50">
+        {% for entry in page_obj.object_list %}
+        <article class="grid grid-cols-1 lg:grid-cols-[1.2fr_repeat(5,1fr)_auto] gap-4 px-6 py-5 items-center hover:bg-surface-container-low transition-colors">
+            <div>
+                <p class="font-headline-sm text-headline-sm text-on-surface">{{ entry.entry_date|date:"M d, Y" }}</p>
+                <p class="font-label-sm text-label-sm text-on-surface-variant">{{ entry.entry_date|date:"l" }}</p>
+            </div>
+
+            <div class="flex lg:block items-center justify-between gap-4">
+                <span class="lg:hidden font-label-sm text-label-sm text-on-surface-variant">Sleep</span>
+                <span class="font-label-md text-label-md text-primary font-semibold">{{ entry.sleep_quality }}/10</span>
+            </div>
+
+            <div class="flex lg:block items-center justify-between gap-4">
+                <span class="lg:hidden font-label-sm text-label-sm text-on-surface-variant">Energy</span>
+                <span class="font-label-md text-label-md text-secondary font-semibold">{{ entry.energy_rating }}/10</span>
+            </div>
+
+            <div class="flex lg:block items-center justify-between gap-4">
+                <span class="lg:hidden font-label-sm text-label-sm text-on-surface-variant">Mood</span>
+                <span class="font-label-md text-label-md text-tertiary font-semibold">{{ entry.mood_rating }}/10</span>
+            </div>
+
+            <div class="flex lg:block items-center justify-between gap-4">
+                <span class="lg:hidden font-label-sm text-label-sm text-on-surface-variant">Exercise</span>
+                {% if entry.exercise_completed %}
+                <span class="inline-flex items-center gap-1 text-primary font-label-md text-label-md">
+                    <span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+                    Yes
+                </span>
+                {% else %}
+                <span class="text-on-surface-variant font-label-md text-label-md">No</span>
+                {% endif %}
+            </div>
+
+            <div class="flex lg:block items-center justify-between gap-4">
+                <span class="lg:hidden font-label-sm text-label-sm text-on-surface-variant">Caffeine</span>
+                {% if entry.caffeine_consumed %}
+                <span class="inline-flex items-center gap-1 text-tertiary font-label-md text-label-md">
+                    <span class="material-symbols-outlined text-[18px]" data-icon="local_cafe">local_cafe</span>
+                    {% if entry.latest_caffeine_time %}{{ entry.latest_caffeine_time|time:"H:i" }}{% else %}Yes{% endif %}
+                </span>
+                {% else %}
+                <span class="text-on-surface-variant font-label-md text-label-md">No</span>
+                {% endif %}
+            </div>
+
+            <div class="flex lg:justify-end">
+                <a class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-outline-variant text-primary font-label-md text-label-md hover:bg-primary/5 transition-colors"
+                    href="{% url 'tracker:entry_edit' entry.id %}">
+                    <span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+                    Edit
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% if page_obj.has_other_pages %}
+<nav class="flex items-center justify-center gap-3" aria-label="Entry history pagination">
+    {% if page_obj.has_previous %}
+    <a class="px-4 py-2 rounded-lg border border-outline-variant text-primary font-label-md text-label-md hover:bg-primary/5 transition-colors"
+        href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span class="font-label-md text-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a class="px-4 py-2 rounded-lg border border-outline-variant text-primary font-label-md text-label-md hover:bg-primary/5 transition-colors"
+        href="?page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% else %}
+<section class="bg-surface-container-lowest border border-outline-variant rounded-3xl p-10 text-center shadow-sm">
+    <div class="w-16 h-16 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-[34px]" data-icon="edit_calendar">edit_calendar</span>
+    </div>
+    <h3 class="font-headline-md text-headline-md text-on-surface mb-3">No entries yet</h3>
+    <p class="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto mb-8">
+        Start with today&apos;s wellbeing log and your history will build here over time.
+    </p>
+    <a href="{% url 'tracker:entry_create' %}"
+        class="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md shadow-sm hover:bg-primary-container transition-colors">
+        Log First Entry
+        <span class="material-symbols-outlined text-[20px]" data-icon="arrow_forward">arrow_forward</span>
+    </a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('[data-toast]').forEach((toast) => {
+        window.setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+        }, 2500);
+        window.setTimeout(() => {
+            toast.remove();
+        }, 3100);
+    });
+</script>
+{% endblock %}

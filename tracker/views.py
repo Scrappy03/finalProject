@@ -3,8 +3,9 @@ from datetime import time, timedelta
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import (
@@ -291,6 +292,19 @@ def dashboard(request):
 
 
 @login_required
+def entry_history(request):
+    """Show all wellbeing entries for the signed-in user."""
+    entries = DailyEntry.objects.filter(user=request.user).order_by("-entry_date")
+    paginator = Paginator(entries, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "tracker/entry_history.html", {
+        "entry_count": entries.count(),
+        "page_obj": page_obj,
+    })
+
+
+@login_required
 def entry_create(request):
     """Create or update a daily wellbeing entry for the signed-in user."""
     today = timezone.localdate()
@@ -310,7 +324,43 @@ def entry_create(request):
     else:
         form = DailyEntryForm(instance=entry, initial={"entry_date": today})
 
-    return render(request, 'tracker/entry_form.html', {"form": form, "entry": entry})
+    return render(request, 'tracker/entry_form.html', {
+        "cancel_url": "tracker:dashboard",
+        "entry": entry,
+        "form": form,
+        "page_heading": "How was your day?",
+        "page_intro": (
+            "Reflect on your habits and state of being. Each entry feeds your dashboard with better sleep, energy, mood, "
+            "and routine patterns."
+        ),
+        "submit_label": "Save Entry",
+    })
+
+
+@login_required
+def entry_edit(request, entry_id):
+    """Edit one existing wellbeing entry owned by the signed-in user."""
+    entry = get_object_or_404(DailyEntry, pk=entry_id, user=request.user)
+
+    if request.method == "POST":
+        form = DailyEntryForm(request.POST, instance=entry)
+        if form.is_valid():
+            daily_entry = form.save(commit=False)
+            daily_entry.user = request.user
+            daily_entry.save()
+            messages.success(request, "Your entry has been updated.")
+            return redirect("tracker:entry_history")
+    else:
+        form = DailyEntryForm(instance=entry)
+
+    return render(request, "tracker/entry_form.html", {
+        "cancel_url": "tracker:entry_history",
+        "entry": entry,
+        "form": form,
+        "page_heading": f"Edit {entry.entry_date:%d %b %Y}",
+        "page_intro": "Update this logged entry while keeping it connected to your wellbeing trends and insights.",
+        "submit_label": "Update Entry",
+    })
 
 
 @login_required
@@ -407,3 +457,8 @@ def settings(request):
         "last_login": request.user.last_login,
     }
     return render(request, "tracker/settings.html", context)
+
+
+def page_not_found(request, exception):
+    """Render Sanctuary's custom 404 page."""
+    return render(request, "tracker/404.html", status=404)
