@@ -1,11 +1,15 @@
-from datetime import time
+from datetime import time, timedelta
 from statistics import median
+
+from django.utils import timezone
 
 from .models import DailyEntry
 from .utils import clamp_percent
 
 
 RECENT_INSIGHT_LIMIT = 30
+SLEEP_DURATION_LOOKBACK_DAYS = 7
+ADULT_SLEEP_MINIMUM_HOURS = 7
 INSIGHT_SIGNAL_THRESHOLD = 0.3
 SUMMARY_SIGNAL_THRESHOLD = 0.2
 SLEEP_QUALITY_THRESHOLD = 7
@@ -31,8 +35,30 @@ def average_field(entries, field_name):
     return sum(getattr(entry, field_name) for entry in entries) / len(entries)
 
 
+def average(values):
+    return sum(values) / len(values) if values else 0
+
+
 def time_to_minutes(value):
     return value.hour * 60 + value.minute
+
+
+def sleep_duration_hours(entry):
+    bedtime_minutes = time_to_minutes(entry.bedtime)
+    wake_minutes = time_to_minutes(entry.wake_time)
+    duration_minutes = wake_minutes - bedtime_minutes
+    if duration_minutes <= 0:
+        duration_minutes += 24 * 60
+    return duration_minutes / 60
+
+
+def format_sleep_duration(hours):
+    if not hours:
+        return "--"
+
+    total_minutes = round(hours * 60)
+    duration_hours, duration_minutes = divmod(total_minutes, 60)
+    return f"{duration_hours}h {duration_minutes:02d}m"
 
 
 def format_minutes_as_time(total_minutes):
@@ -59,6 +85,55 @@ def get_target_time_labels(user_profile):
         "target_bedtime": format_minutes_as_time(time_to_minutes(user_profile.target_bedtime)),
         "target_wake_time": format_minutes_as_time(time_to_minutes(user_profile.target_wake_time)),
         "has_targets": True,
+    }
+
+
+def build_sleep_duration_insight(entries):
+    cutoff_date = timezone.localdate() - timedelta(days=SLEEP_DURATION_LOOKBACK_DAYS - 1)
+    recent_entries = [
+        entry
+        for entry in entries
+        if entry.entry_date >= cutoff_date
+    ]
+    average_duration = average([sleep_duration_hours(entry) for entry in recent_entries])
+    is_below_guideline = bool(recent_entries and average_duration < ADULT_SLEEP_MINIMUM_HOURS)
+
+    if not recent_entries:
+        summary = "Log a few nights so Sanctuary can compare your sleep duration with adult sleep guidance."
+        action_text = "Start by logging bedtime and wake time for the next few days."
+        confidence_label = "Needs more data"
+    elif is_below_guideline:
+        summary = (
+            f"Your average sleep over the last 7 days is {average_duration:.1f} hours, which is below the commonly "
+            "recommended adult guideline of 7 or more hours per night."
+        )
+        action_text = (
+            "Consider prioritising sleep duration before focusing on smaller lifestyle changes, such as by moving "
+            "bedtime earlier in a realistic 15-minute step."
+        )
+        confidence_label = "Worth prioritising"
+    else:
+        summary = (
+            f"Your average sleep over the last 7 days is {average_duration:.1f} hours, meeting the common adult "
+            "guideline of 7 or more hours per night."
+        )
+        action_text = "Keep tracking duration alongside sleep quality so you can see whether enough sleep is also restorative."
+        confidence_label = "On track"
+
+    return {
+        "entry_count": len(recent_entries),
+        "average_duration": average_duration,
+        "average_duration_label": format_sleep_duration(average_duration),
+        "bar_percent": clamp_percent((average_duration / 10) * 100),
+        "guideline_hours": ADULT_SLEEP_MINIMUM_HOURS,
+        "is_below_guideline": is_below_guideline,
+        "confidence_label": confidence_label,
+        "summary": summary,
+        "research_context": (
+            "The American Academy of Sleep Medicine and Sleep Research Society recommend that adults sleep 7 or more "
+            "hours per night on a regular basis to support health and wellbeing."
+        ),
+        "action_text": action_text,
     }
 
 
@@ -118,6 +193,14 @@ def build_late_caffeine_sleep_insight(entries, user_profile):
         "no_or_early_bar_percent": clamp_percent((no_or_early_average / 10) * 100),
         "average_difference": average_difference,
         "summary": summary,
+        "research_context": (
+            "Research suggests caffeine's effect on sleep depends on both dose and timing, with larger doses closer to "
+            "bedtime having a stronger negative impact."
+        ),
+        "action_text": (
+            "This does not prove caffeine caused the difference, but it may be a useful habit to test by keeping "
+            "caffeine before your cutoff for the next few entries."
+        ),
     }
 
 
@@ -174,6 +257,13 @@ def build_screen_time_sleep_insight(entries):
         "low_screen_bar_percent": clamp_percent((low_screen_average / 10) * 100),
         "average_difference": average_difference,
         "summary": summary,
+        "research_context": (
+            "Research has associated increased screen time with adverse sleep outcomes, while noting that more work is "
+            "needed on causality and age-specific guidance."
+        ),
+        "action_text": (
+            "Try treating lower screen use before bed as a practical sleep-supporting experiment rather than a strict rule."
+        ),
     }
 
 
@@ -247,6 +337,14 @@ def build_exercise_energy_mood_insight(entries):
         "vitality_average": vitality_average,
         "vitality_difference": vitality_difference,
         "summary": summary,
+        "research_context": (
+            "Research reviews generally link regular exercise with better sleep quality and reduced sleep disorder "
+            "symptoms, although effects can vary by timing, duration, intensity, age, sex, and fitness level."
+        ),
+        "action_text": (
+            "This is an association in your logs, so keep tracking movement alongside sleep, energy, and mood to see "
+            "whether the pattern holds."
+        ),
     }
 
 
@@ -311,6 +409,13 @@ def build_sleep_quality_mood_energy_insight(entries):
         "lower_sleep_mood_bar_percent": clamp_percent((lower_sleep_mood_average / 10) * 100),
         "wellbeing_difference": wellbeing_difference,
         "summary": summary,
+        "research_context": (
+            "Sleep quality is closely connected with next-day functioning, so comparing it with energy and mood can help "
+            "show whether recovery is supporting your wider wellbeing."
+        ),
+        "action_text": (
+            "Use this as a prompt to test one sleep-supporting habit and watch whether energy or mood changes over time."
+        ),
     }
 
 
@@ -333,6 +438,11 @@ def build_sleep_timing_consistency_insight(entries, user_profile):
             **target_time_labels,
             "sleep_quality_difference": 0,
             "summary": "Log a few entries with bedtime and wake time to compare sleep timing consistency.",
+            "research_context": (
+                "Sleep regularity is increasingly recognised as an important health factor, not just a companion to "
+                "sleep duration."
+            ),
+            "action_text": "Start by logging enough bedtime and wake-time entries to reveal your usual sleep window.",
         }
 
     typical_bedtime_minutes = median([bedtime_to_timeline_minutes(entry.bedtime) for entry in entries])
@@ -392,14 +502,34 @@ def build_sleep_timing_consistency_insight(entries, user_profile):
         **target_time_labels,
         "sleep_quality_difference": sleep_quality_difference,
         "summary": summary,
+        "research_context": (
+            "Research suggests sleep regularity is an important predictor of health outcomes, with one cohort study "
+            "finding it was a stronger predictor of mortality risk than sleep duration."
+        ),
+        "action_text": (
+            "Maintaining a steadier sleep window could be a useful focus, especially when consistent days also show "
+            "better sleep quality in your own data."
+        ),
     }
 
 
 def build_reflective_suggestion(
+    sleep_duration_insight,
     sleep_quality_mood_energy_insight,
     sleep_timing_consistency_insight,
 ):
     suggestions = []
+
+    if sleep_duration_insight["is_below_guideline"]:
+        suggestions.append({
+            "score": ADULT_SLEEP_MINIMUM_HOURS - sleep_duration_insight["average_duration"] + 1,
+            "icon": "bedtime",
+            "title": "Prioritise enough sleep",
+            "body": (
+                f"Your recent average is {sleep_duration_insight['average_duration']:.1f} hours, below the common "
+                "adult guideline of 7 or more hours. Try protecting a slightly longer sleep window tonight."
+            ),
+        })
 
     if (
         sleep_timing_consistency_insight["has_comparison"]
@@ -451,6 +581,7 @@ def build_insights_context(user, user_profile):
     recent_entries = list(
         DailyEntry.objects.filter(user=user).order_by("-entry_date")[:RECENT_INSIGHT_LIMIT]
     )
+    sleep_duration_insight = build_sleep_duration_insight(recent_entries)
     caffeine_sleep_insight = build_late_caffeine_sleep_insight(recent_entries, user_profile)
     screen_time_sleep_insight = build_screen_time_sleep_insight(recent_entries)
     exercise_energy_mood_insight = build_exercise_energy_mood_insight(recent_entries)
@@ -458,12 +589,14 @@ def build_insights_context(user, user_profile):
     sleep_timing_consistency_insight = build_sleep_timing_consistency_insight(recent_entries, user_profile)
 
     return {
+        "sleep_duration_insight": sleep_duration_insight,
         "caffeine_sleep_insight": caffeine_sleep_insight,
         "screen_time_sleep_insight": screen_time_sleep_insight,
         "exercise_energy_mood_insight": exercise_energy_mood_insight,
         "sleep_quality_mood_energy_insight": sleep_quality_mood_energy_insight,
         "sleep_timing_consistency_insight": sleep_timing_consistency_insight,
         "reflective_suggestion": build_reflective_suggestion(
+            sleep_duration_insight,
             sleep_quality_mood_energy_insight,
             sleep_timing_consistency_insight,
         ),

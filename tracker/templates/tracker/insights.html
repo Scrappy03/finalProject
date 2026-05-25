@@ -1,491 +1,900 @@
 {% extends 'tracker/base.html' %}
+{% load static %}
 
 {% block title %}Insights - Sanctuary{% endblock %}
 
 {% block page_title %}Personal Insights{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/insights.css' %}">
+{% endblock %}
+
 {% block content %}
 <!-- Page Intro -->
 <section class="space-y-3">
-    <h3 class="font-headline-lg text-headline-lg text-on-surface">Personal Insights</h3>
-    <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-        We've noticed a few gentle patterns in your rhythm. These reflections are here to help you understand what
-        supports your best self.
-    </p>
+  <h3 class="font-headline-lg text-headline-lg text-on-surface">
+    Personal Insights
+  </h3>
+  <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+    We've noticed a few gentle patterns in your rhythm. These reflections are
+    here to help you understand what supports your best self.
+  </p>
 </section>
 
 <!-- Bento Grid Insights -->
 <section class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-    <!-- Late Caffeine vs Sleep -->
-    <article
-        class="md:col-span-7 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-shadow">
+  <!-- Sleep Duration Baseline -->
+  <article
+    class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid lg:grid-cols-12 gap-8 hover:shadow-md transition-shadow"
+  >
+    <div class="lg:col-span-7 flex flex-col justify-center">
+      <div class="mb-6 flex flex-wrap items-center gap-2">
+        <span
+          class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-sm text-label-sm"
+          >Sleep Foundation</span
+        >
+        <span
+          class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+          >{{ sleep_duration_insight.confidence_label }}</span
+        >
+      </div>
+      <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">
+        Sleep Duration Baseline
+      </h4>
+      <p
+        class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed"
+      >
+        {{ sleep_duration_insight.summary }}
+      </p>
+      {% include 'tracker/partials/insight_info_trigger.html' with title="Sleep Duration Baseline" research=sleep_duration_insight.research_context action=sleep_duration_insight.action_text %}
+    </div>
+
+    <div
+      class="lg:col-span-5 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/20 flex flex-col justify-between"
+    >
+      <div class="flex items-start justify-between gap-6 mb-8">
         <div>
-            <div class="flex flex-wrap items-center gap-2 mb-6">
-                <span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-label-sm text-label-sm">Sleep Pattern</span>
-                <span class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm">{{ caffeine_sleep_insight.confidence_label }}</span>
-            </div>
-            <h4 class="font-headline-md text-headline-md text-on-surface mb-4">Late Caffeine vs. Sleep Quality</h4>
-            <p class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed">
-                {{ caffeine_sleep_insight.summary }}
-            </p>
+          <p
+            class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+          >
+            7-day average
+          </p>
+          <p class="text-[48px] leading-[56px] text-primary font-bold">
+            {{ sleep_duration_insight.average_duration_label }}
+          </p>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-                class="bg-surface-container-low rounded-2xl p-5 min-h-48 flex flex-col justify-between border border-outline-variant/40 overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
-                        <span class="material-symbols-outlined" data-icon="local_cafe">local_cafe</span>
-                    </div>
-                    <span class="font-label-sm text-label-sm text-on-surface-variant">{{ caffeine_sleep_insight.late_count }} entr{{ caffeine_sleep_insight.late_count|pluralize:"y,ies" }}</span>
-                </div>
-                <div>
-                    <span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1 block">After {{ caffeine_sleep_insight.cutoff_label }}</span>
-                    <span class="text-headline-sm font-headline-sm text-on-surface">Late caffeine</span>
-                </div>
-                <div class="mt-4 h-2 bg-outline-variant/30 rounded-full overflow-hidden">
-                    <div class="h-full bg-tertiary-container rounded-full"
-                        style="width: {{ caffeine_sleep_insight.late_bar_percent|floatformat:0 }}%;"></div>
-                </div>
-                <span class="text-label-sm font-label-sm mt-2 text-on-surface-variant">
-                    {% if caffeine_sleep_insight.late_count %}
-                    {{ caffeine_sleep_insight.late_average|floatformat:1 }}/10 sleep quality
-                    {% else %}
-                    No matching entries yet
-                    {% endif %}
-                </span>
-            </div>
-
-            <div
-                class="bg-primary-fixed/30 rounded-2xl p-5 min-h-48 flex flex-col justify-between border border-primary/10 overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
-                        <span class="material-symbols-outlined" data-icon="schedule">schedule</span>
-                    </div>
-                    <span class="font-label-sm text-label-sm text-primary">{{ caffeine_sleep_insight.no_or_early_count }} entr{{ caffeine_sleep_insight.no_or_early_count|pluralize:"y,ies" }}</span>
-                </div>
-                <div>
-                    <span class="text-label-sm font-label-sm text-primary uppercase tracking-wider mb-1 block">Before {{ caffeine_sleep_insight.cutoff_label }}</span>
-                    <span class="text-headline-sm font-headline-sm text-primary">No or early caffeine</span>
-                </div>
-                <div class="mt-4 h-2 bg-primary/10 rounded-full overflow-hidden">
-                    <div class="h-full bg-primary rounded-full"
-                        style="width: {{ caffeine_sleep_insight.no_or_early_bar_percent|floatformat:0 }}%;"></div>
-                </div>
-                <span class="text-label-sm font-label-sm mt-2 text-primary">
-                    {% if caffeine_sleep_insight.no_or_early_count %}
-                    {{ caffeine_sleep_insight.no_or_early_average|floatformat:1 }}/10 sleep quality
-                    {% else %}
-                    No matching entries yet
-                    {% endif %}
-                </span>
-            </div>
+        <div
+          class="w-14 h-14 rounded-2xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant shrink-0"
+        >
+          <span class="material-symbols-outlined" data-icon="night_sight_auto"
+            >night_sight_auto</span
+          >
         </div>
-    </article>
-
-    <!-- Screen Time vs Sleep -->
-    <article
-        class="md:col-span-5 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 flex flex-col hover:shadow-md transition-shadow">
-        <div class="mb-6 flex flex-wrap items-center gap-2">
-            <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full font-label-sm text-label-sm">Digital Wellness</span>
-            <span class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm">{{ screen_time_sleep_insight.confidence_label }}</span>
+      </div>
+      <div>
+        <div class="flex items-center justify-between gap-4 mb-3">
+          <span class="font-label-md text-label-md text-on-surface"
+            >Adult guideline</span
+          >
+          <span class="font-label-md text-label-md text-on-surface-variant"
+            >{{ sleep_duration_insight.guideline_hours }}+ hours</span
+          >
         </div>
-        <h4 class="font-headline-md text-headline-md text-on-surface mb-4">Screen Time vs. Sleep Quality</h4>
-        <p class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed">
-            {{ screen_time_sleep_insight.summary }}
+        <div class="h-4 bg-primary/10 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-primary rounded-full"
+            style="width: {{ sleep_duration_insight.bar_percent|floatformat:0 }}%;"
+          ></div>
+        </div>
+        <p class="mt-2 font-label-sm text-label-sm text-on-surface-variant">
+          Based on {{ sleep_duration_insight.entry_count }} logged night{{ sleep_duration_insight.entry_count|pluralize }}
         </p>
+      </div>
+    </div>
+  </article>
 
-        <div class="flex-1 flex flex-col justify-center gap-6">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
-                    <span class="material-symbols-outlined" data-icon="smartphone">smartphone</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between gap-3 mb-1">
-                        <span class="text-label-md font-label-md text-on-surface-variant">30m+ screen time</span>
-                        <span class="text-label-md font-label-md text-on-surface-variant">
-                            {% if screen_time_sleep_insight.higher_screen_count %}
-                            {{ screen_time_sleep_insight.higher_screen_average|floatformat:1 }}/10
-                            {% else %}
-                            No data
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="h-3 bg-surface-container-low rounded-full">
-                        <div class="h-full bg-tertiary-container/60 rounded-full"
-                            style="width: {{ screen_time_sleep_insight.higher_screen_bar_percent|floatformat:0 }}%;"></div>
-                    </div>
-                    <span class="mt-2 block text-label-sm font-label-sm text-on-surface-variant">
-                        {{ screen_time_sleep_insight.higher_screen_count }} entr{{ screen_time_sleep_insight.higher_screen_count|pluralize:"y,ies" }}
-                    </span>
-                </div>
-            </div>
+  <!-- Late Caffeine vs Sleep -->
+  <article
+    class="md:col-span-7 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 flex flex-col justify-between hover:shadow-md transition-shadow"
+  >
+    <div>
+      <div class="flex flex-wrap items-center gap-2 mb-6">
+        <span
+          class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-label-sm text-label-sm"
+          >Sleep Pattern</span
+        >
+        <span
+          class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+          >{{ caffeine_sleep_insight.confidence_label }}</span
+        >
+      </div>
+      <h4 class="font-headline-md text-headline-md text-on-surface mb-4">
+        Late Caffeine vs. Sleep Quality
+      </h4>
+      <p
+        class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed"
+      >
+        {{ caffeine_sleep_insight.summary }}
+      </p>
+      {% include 'tracker/partials/insight_info_trigger.html' with title="Late Caffeine vs. Sleep Quality" research=caffeine_sleep_insight.research_context action=caffeine_sleep_insight.action_text %}
+    </div>
 
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant shrink-0">
-                    <span class="material-symbols-outlined" data-icon="book_2">book_2</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between gap-3 mb-1">
-                        <span class="text-label-md font-label-md text-primary">Under 30m</span>
-                        <span class="text-label-md font-label-md text-primary">
-                            {% if screen_time_sleep_insight.low_screen_count %}
-                            {{ screen_time_sleep_insight.low_screen_average|floatformat:1 }}/10
-                            {% else %}
-                            No data
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="h-3 bg-primary-fixed/30 rounded-full">
-                        <div class="h-full bg-primary rounded-full"
-                            style="width: {{ screen_time_sleep_insight.low_screen_bar_percent|floatformat:0 }}%;"></div>
-                    </div>
-                    <span class="mt-2 block text-label-sm font-label-sm text-primary">
-                        {{ screen_time_sleep_insight.low_screen_count }} entr{{ screen_time_sleep_insight.low_screen_count|pluralize:"y,ies" }}
-                    </span>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div
+        class="bg-surface-container-low rounded-2xl p-5 min-h-48 flex flex-col justify-between border border-outline-variant/40 overflow-hidden"
+      >
+        <div class="flex items-center justify-between">
+          <div
+            class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant"
+          >
+            <span class="material-symbols-outlined" data-icon="local_cafe"
+              >local_cafe</span
+            >
+          </div>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">
+            {{ caffeine_sleep_insight.late_count }} entr{{ caffeine_sleep_insight.late_count|pluralize:"y,ies" }}
+          </span>
         </div>
-    </article>
+        <div>
+          <span
+            class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1 block"
+            >After {{ caffeine_sleep_insight.cutoff_label }}</span
+          >
+          <span class="text-headline-sm font-headline-sm text-on-surface"
+            >Late caffeine</span
+          >
+        </div>
+        <div
+          class="mt-4 h-2 bg-outline-variant/30 rounded-full overflow-hidden"
+        >
+          <div
+            class="h-full bg-tertiary-container rounded-full"
+            style="width: {{ caffeine_sleep_insight.late_bar_percent|floatformat:0 }}%;"
+          ></div>
+        </div>
+        <span class="text-label-sm font-label-sm mt-2 text-on-surface-variant">
+          {% if caffeine_sleep_insight.late_count %}
+          {{ caffeine_sleep_insight.late_average|floatformat:1 }}/10 sleep quality
+          {% else %}
+          No matching entries yet
+          {% endif %}
+        </span>
+      </div>
 
-    <!-- Exercise vs Energy and Mood -->
-    <article
-        class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid md:grid-cols-2 gap-12 hover:shadow-md transition-shadow">
-        <div class="flex flex-col justify-center">
-            <div class="mb-6 flex flex-wrap items-center gap-2">
-                <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-sm text-label-sm">Movement</span>
-                <span class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm">{{ exercise_energy_mood_insight.confidence_label }}</span>
+      <div
+        class="bg-primary-fixed/30 rounded-2xl p-5 min-h-48 flex flex-col justify-between border border-primary/10 overflow-hidden"
+      >
+        <div class="flex items-center justify-between">
+          <div
+            class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant"
+          >
+            <span class="material-symbols-outlined" data-icon="schedule"
+              >schedule</span
+            >
+          </div>
+          <span class="font-label-sm text-label-sm text-primary">
+            {{ caffeine_sleep_insight.no_or_early_count }} entr{{ caffeine_sleep_insight.no_or_early_count|pluralize:"y,ies" }}
+          </span>
+        </div>
+        <div>
+          <span
+            class="text-label-sm font-label-sm text-primary uppercase tracking-wider mb-1 block"
+            >Before {{ caffeine_sleep_insight.cutoff_label }}</span
+          >
+          <span class="text-headline-sm font-headline-sm text-primary"
+            >No or early caffeine</span
+          >
+        </div>
+        <div class="mt-4 h-2 bg-primary/10 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-primary rounded-full"
+            style="width: {{ caffeine_sleep_insight.no_or_early_bar_percent|floatformat:0 }}%;"
+          ></div>
+        </div>
+        <span class="text-label-sm font-label-sm mt-2 text-primary">
+          {% if caffeine_sleep_insight.no_or_early_count %}
+          {{ caffeine_sleep_insight.no_or_early_average|floatformat:1 }}/10 sleep quality
+          {% else %}
+          No matching entries yet
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </article>
+
+  <!-- Screen Time vs Sleep -->
+  <article
+    class="md:col-span-5 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 flex flex-col hover:shadow-md transition-shadow"
+  >
+    <div class="mb-6 flex flex-wrap items-center gap-2">
+      <span
+        class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full font-label-sm text-label-sm"
+        >Digital Wellness</span
+      >
+      <span
+        class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+        >{{ screen_time_sleep_insight.confidence_label }}</span
+      >
+    </div>
+    <h4 class="font-headline-md text-headline-md text-on-surface mb-4">
+      Screen Time vs. Sleep Quality
+    </h4>
+    <p
+      class="font-body-md text-body-md text-on-surface-variant mb-8 leading-relaxed"
+    >
+      {{ screen_time_sleep_insight.summary }}
+    </p>
+    {% include 'tracker/partials/insight_info_trigger.html' with title="Screen Time vs. Sleep Quality" research=screen_time_sleep_insight.research_context action=screen_time_sleep_insight.action_text %}
+
+    <div class="flex-1 flex flex-col justify-center gap-6">
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0"
+        >
+          <span class="material-symbols-outlined" data-icon="smartphone"
+            >smartphone</span
+          >
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between gap-3 mb-1">
+            <span class="text-label-md font-label-md text-on-surface-variant"
+              >Higher screen time</span
+            >
+            <span class="text-label-md font-label-md text-on-surface-variant">
+              {% if screen_time_sleep_insight.higher_screen_count %}
+              {{ screen_time_sleep_insight.higher_screen_average|floatformat:1 }}/10
+              {% else %}
+              No data
+              {% endif %}
+            </span>
+          </div>
+          <div class="h-3 bg-surface-container-low rounded-full">
+            <div
+              class="h-full bg-tertiary-container/60 rounded-full"
+              style="width: {{ screen_time_sleep_insight.higher_screen_bar_percent|floatformat:0 }}%;"
+            ></div>
+          </div>
+          <span
+            class="mt-2 block text-label-sm font-label-sm text-on-surface-variant"
+          >
+            {{ screen_time_sleep_insight.higher_screen_count }} entr{{ screen_time_sleep_insight.higher_screen_count|pluralize:"y,ies" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant shrink-0"
+        >
+          <span class="material-symbols-outlined" data-icon="book_2"
+            >book_2</span
+          >
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between gap-3 mb-1">
+            <span class="text-label-md font-label-md text-primary"
+              >Under 30m</span
+            >
+            <span class="text-label-md font-label-md text-primary">
+              {% if screen_time_sleep_insight.low_screen_count %}
+              {{ screen_time_sleep_insight.low_screen_average|floatformat:1 }}/10
+              {% else %}
+              No data
+              {% endif %}
+            </span>
+          </div>
+          <div class="h-3 bg-primary-fixed/30 rounded-full">
+            <div
+              class="h-full bg-primary rounded-full"
+              style="width: {{ screen_time_sleep_insight.low_screen_bar_percent|floatformat:0 }}%;"
+            ></div>
+          </div>
+          <span class="mt-2 block text-label-sm font-label-sm text-primary">
+            {{ screen_time_sleep_insight.low_screen_count }} entr{{ screen_time_sleep_insight.low_screen_count|pluralize:"y,ies" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Exercise vs Energy and Mood -->
+  <article
+    class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid md:grid-cols-2 gap-12 hover:shadow-md transition-shadow"
+  >
+    <div class="flex flex-col justify-center">
+      <div class="mb-6 flex flex-wrap items-center gap-2">
+        <span
+          class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-sm text-label-sm"
+          >Movement</span
+        >
+        <span
+          class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+          >{{ exercise_energy_mood_insight.confidence_label }}</span
+        >
+      </div>
+      <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">
+        Exercise, Energy &amp; Mood
+      </h4>
+      <p
+        class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed"
+      >
+        {{ exercise_energy_mood_insight.summary }}
+      </p>
+      {% include 'tracker/partials/insight_info_trigger.html' with title="Exercise, Energy & Mood" research=exercise_energy_mood_insight.research_context action=exercise_energy_mood_insight.action_text %}
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-primary"></div>
+          <span class="text-label-md font-label-md text-on-surface-variant"
+            >Exercise energy</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-primary-container"></div>
+          <span class="text-label-md font-label-md text-on-surface-variant"
+            >Exercise mood</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-surface-container-high"></div>
+          <span class="text-label-md font-label-md text-on-surface-variant"
+            >Non-exercise day</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="relative min-h-[20rem] bg-surface-container-low rounded-3xl p-8 pb-12 flex flex-col justify-between border border-outline-variant/20"
+    >
+      <div class="absolute top-8 right-8 text-right">
+        <div class="text-[48px] leading-[56px] text-primary font-bold">
+          {% if exercise_energy_mood_insight.has_comparison %}
+          {{ exercise_energy_mood_insight.vitality_difference|floatformat:"+1" }}
+          {% else %}
+          {{ exercise_energy_mood_insight.vitality_average|floatformat:1 }}
+          {% endif %}
+        </div>
+        <div class="text-label-sm text-on-surface-variant font-label-sm">
+          {% if exercise_energy_mood_insight.has_comparison %} Vitality
+          difference {% else %} Average vitality {% endif %}
+        </div>
+      </div>
+
+      <div class="flex-1 flex items-end justify-around gap-8 pt-20">
+        <div class="relative flex items-end gap-4 h-52">
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <div
+              class="w-12 bg-primary rounded-t-xl flex items-start justify-center pt-2 min-h-2"
+              style="height: {{ exercise_energy_mood_insight.exercise_energy_bar_percent|floatformat:0 }}%;"
+            >
+              <span
+                class="material-symbols-outlined text-white text-[16px]"
+                data-icon="bolt"
+                >bolt</span
+              >
             </div>
-            <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">Exercise, Energy &amp; Mood</h4>
-            <p class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed">
-                {{ exercise_energy_mood_insight.summary }}
-            </p>
-            <div class="flex flex-wrap gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-primary"></div>
-                    <span class="text-label-md font-label-md text-on-surface-variant">Exercise energy</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-primary-container"></div>
-                    <span class="text-label-md font-label-md text-on-surface-variant">Exercise mood</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-surface-container-high"></div>
-                    <span class="text-label-md font-label-md text-on-surface-variant">Non-exercise day</span>
-                </div>
+            <span class="text-label-sm text-on-surface-variant font-medium"
+              >Energy</span
+            >
+            <span class="text-label-sm text-primary font-label-sm">
+              {{ exercise_energy_mood_insight.exercise_energy_average|floatformat:1 }}
+            </span>
+          </div>
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <div
+              class="w-12 bg-primary-container rounded-t-xl flex items-start justify-center pt-2 min-h-2"
+              style="height: {{ exercise_energy_mood_insight.exercise_mood_bar_percent|floatformat:0 }}%;"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary-container text-[16px]"
+                data-icon="sentiment_satisfied"
+                >sentiment_satisfied</span
+              >
             </div>
+            <span class="text-label-sm text-on-surface-variant font-medium"
+              >Mood</span
+            >
+            <span class="text-label-sm text-primary font-label-sm">
+              {{ exercise_energy_mood_insight.exercise_mood_average|floatformat:1 }}
+            </span>
+          </div>
+          <div
+            class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-label-sm font-bold text-primary whitespace-nowrap"
+          >
+            {{ exercise_energy_mood_insight.exercise_count }} exercise day{{ exercise_energy_mood_insight.exercise_count|pluralize }}
+          </div>
+        </div>
+
+        <div class="relative flex items-end gap-4 h-52">
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <div
+              class="w-12 bg-surface-container-high rounded-t-xl min-h-2"
+              style="height: {{ exercise_energy_mood_insight.rest_energy_bar_percent|floatformat:0 }}%;"
+            ></div>
+            <span class="text-label-sm text-on-surface-variant font-medium"
+              >Energy</span
+            >
+            <span class="text-label-sm text-on-surface-variant font-label-sm">
+              {{ exercise_energy_mood_insight.rest_energy_average|floatformat:1 }}
+            </span>
+          </div>
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <div
+              class="w-12 bg-surface-container-high rounded-t-xl min-h-2"
+              style="height: {{ exercise_energy_mood_insight.rest_mood_bar_percent|floatformat:0 }}%;"
+            ></div>
+            <span class="text-label-sm text-on-surface-variant font-medium"
+              >Mood</span
+            >
+            <span class="text-label-sm text-on-surface-variant font-label-sm">
+              {{ exercise_energy_mood_insight.rest_mood_average|floatformat:1 }}
+            </span>
+          </div>
+          <div
+            class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-label-sm font-bold text-on-surface-variant whitespace-nowrap"
+          >
+            {{ exercise_energy_mood_insight.rest_count }} non-exercise day{{ exercise_energy_mood_insight.rest_count|pluralize }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Sleep Quality vs Mood and Energy -->
+  <article
+    class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid lg:grid-cols-12 gap-8 hover:shadow-md transition-shadow"
+  >
+    <div class="lg:col-span-5 flex flex-col justify-center">
+      <div class="mb-6 flex flex-wrap items-center gap-2">
+        <span
+          class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-label-sm text-label-sm"
+          >Recovery</span
+        >
+        <span
+          class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+          >{{ sleep_quality_mood_energy_insight.confidence_label }}</span
+        >
+      </div>
+      <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">
+        Sleep Quality, Energy &amp; Mood
+      </h4>
+      <p
+        class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed"
+      >
+        {{ sleep_quality_mood_energy_insight.summary }}
+      </p>
+      {% include 'tracker/partials/insight_info_trigger.html' with title="Sleep Quality, Energy & Mood" research=sleep_quality_mood_energy_insight.research_context action=sleep_quality_mood_energy_insight.action_text %}
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-primary"></div>
+          <span class="text-label-md font-label-md text-on-surface-variant"
+            >Sleep quality 7+</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-surface-container-high"></div>
+          <span class="text-label-md font-label-md text-on-surface-variant"
+            >Sleep quality below 7</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="lg:col-span-7 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/20"
+    >
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div
+          class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30"
+        >
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <p
+                class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+              >
+                Higher sleep
+              </p>
+              <p class="font-headline-sm text-headline-sm text-on-surface">
+                {{ sleep_quality_mood_energy_insight.high_sleep_count }} day{{ sleep_quality_mood_energy_insight.high_sleep_count|pluralize }}
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant"
+            >
+              <span class="material-symbols-outlined" data-icon="hotel_class"
+                >hotel_class</span
+              >
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <span class="font-label-md text-label-md text-on-surface"
+                  >Energy</span
+                >
+                <span class="font-label-md text-label-md text-primary">
+                  {% if sleep_quality_mood_energy_insight.high_sleep_count %}
+                  {{ sleep_quality_mood_energy_insight.high_sleep_energy_average|floatformat:1 }}/10
+                  {% else %}
+                  No data
+                  {% endif %}
+                </span>
+              </div>
+              <div class="h-3 bg-primary/10 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-primary rounded-full"
+                  style="width: {{ sleep_quality_mood_energy_insight.high_sleep_energy_bar_percent|floatformat:0 }}%;"
+                ></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <span class="font-label-md text-label-md text-on-surface"
+                  >Mood</span
+                >
+                <span class="font-label-md text-label-md text-primary">
+                  {% if sleep_quality_mood_energy_insight.high_sleep_count %}
+                  {{ sleep_quality_mood_energy_insight.high_sleep_mood_average|floatformat:1 }}/10
+                  {% else %}
+                  No data
+                  {% endif %}
+                </span>
+              </div>
+              <div class="h-3 bg-primary/10 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-primary rounded-full"
+                  style="width: {{ sleep_quality_mood_energy_insight.high_sleep_mood_bar_percent|floatformat:0 }}%;"
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
-            class="relative min-h-[20rem] bg-surface-container-low rounded-3xl p-8 pb-12 flex flex-col justify-between border border-outline-variant/20">
-            <div class="absolute top-8 right-8 text-right">
-                <div class="text-[48px] leading-[56px] text-primary font-bold">
-                    {% if exercise_energy_mood_insight.has_comparison %}
-                    {{ exercise_energy_mood_insight.vitality_difference|floatformat:"+1" }}
-                    {% else %}
-                    {{ exercise_energy_mood_insight.vitality_average|floatformat:1 }}
-                    {% endif %}
-                </div>
-                <div class="text-label-sm text-on-surface-variant font-label-sm">
-                    {% if exercise_energy_mood_insight.has_comparison %}
-                    Vitality difference
-                    {% else %}
-                    Average vitality
-                    {% endif %}
-                </div>
+          class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30"
+        >
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <p
+                class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+              >
+                Lower sleep
+              </p>
+              <p class="font-headline-sm text-headline-sm text-on-surface">
+                {{ sleep_quality_mood_energy_insight.lower_sleep_count }} day{{ sleep_quality_mood_energy_insight.lower_sleep_count|pluralize }}
+              </p>
             </div>
-
-            <div class="flex-1 flex items-end justify-around gap-8 pt-20">
-                <div class="relative flex items-end gap-4 h-52">
-                    <div class="flex flex-col items-center gap-2 h-full justify-end">
-                        <div class="w-12 bg-primary rounded-t-xl flex items-start justify-center pt-2 min-h-2"
-                            style="height: {{ exercise_energy_mood_insight.exercise_energy_bar_percent|floatformat:0 }}%;">
-                            <span class="material-symbols-outlined text-white text-[16px]" data-icon="bolt">bolt</span>
-                        </div>
-                        <span class="text-label-sm text-on-surface-variant font-medium">Energy</span>
-                        <span class="text-label-sm text-primary font-label-sm">
-                            {{ exercise_energy_mood_insight.exercise_energy_average|floatformat:1 }}
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2 h-full justify-end">
-                        <div class="w-12 bg-primary-container rounded-t-xl flex items-start justify-center pt-2 min-h-2"
-                            style="height: {{ exercise_energy_mood_insight.exercise_mood_bar_percent|floatformat:0 }}%;">
-                            <span class="material-symbols-outlined text-on-primary-container text-[16px]" data-icon="sentiment_satisfied">sentiment_satisfied</span>
-                        </div>
-                        <span class="text-label-sm text-on-surface-variant font-medium">Mood</span>
-                        <span class="text-label-sm text-primary font-label-sm">
-                            {{ exercise_energy_mood_insight.exercise_mood_average|floatformat:1 }}
-                        </span>
-                    </div>
-                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-label-sm font-bold text-primary whitespace-nowrap">
-                        {{ exercise_energy_mood_insight.exercise_count }} exercise day{{ exercise_energy_mood_insight.exercise_count|pluralize }}
-                    </div>
-                </div>
-
-                <div class="relative flex items-end gap-4 h-52">
-                    <div class="flex flex-col items-center gap-2 h-full justify-end">
-                        <div class="w-12 bg-surface-container-high rounded-t-xl min-h-2"
-                            style="height: {{ exercise_energy_mood_insight.rest_energy_bar_percent|floatformat:0 }}%;"></div>
-                        <span class="text-label-sm text-on-surface-variant font-medium">Energy</span>
-                        <span class="text-label-sm text-on-surface-variant font-label-sm">
-                            {{ exercise_energy_mood_insight.rest_energy_average|floatformat:1 }}
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2 h-full justify-end">
-                        <div class="w-12 bg-surface-container-high rounded-t-xl min-h-2"
-                            style="height: {{ exercise_energy_mood_insight.rest_mood_bar_percent|floatformat:0 }}%;"></div>
-                        <span class="text-label-sm text-on-surface-variant font-medium">Mood</span>
-                        <span class="text-label-sm text-on-surface-variant font-label-sm">
-                            {{ exercise_energy_mood_insight.rest_mood_average|floatformat:1 }}
-                        </span>
-                    </div>
-                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-label-sm font-bold text-on-surface-variant whitespace-nowrap">
-                        {{ exercise_energy_mood_insight.rest_count }} non-exercise day{{ exercise_energy_mood_insight.rest_count|pluralize }}
-                    </div>
-                </div>
+            <div
+              class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant"
+            >
+              <span class="material-symbols-outlined" data-icon="bedtime_off"
+                >bedtime_off</span
+              >
             </div>
+          </div>
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <span class="font-label-md text-label-md text-on-surface"
+                  >Energy</span
+                >
+                <span
+                  class="font-label-md text-label-md text-on-surface-variant"
+                >
+                  {% if sleep_quality_mood_energy_insight.lower_sleep_count %}
+                  {{ sleep_quality_mood_energy_insight.lower_sleep_energy_average|floatformat:1 }}/10
+                  {% else %}
+                  No data
+                  {% endif %}
+                </span>
+              </div>
+              <div
+                class="h-3 bg-surface-container-high rounded-full overflow-hidden"
+              >
+                <div
+                  class="h-full bg-secondary rounded-full"
+                  style="width: {{ sleep_quality_mood_energy_insight.lower_sleep_energy_bar_percent|floatformat:0 }}%;"
+                ></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <span class="font-label-md text-label-md text-on-surface"
+                  >Mood</span
+                >
+                <span
+                  class="font-label-md text-label-md text-on-surface-variant"
+                >
+                  {% if sleep_quality_mood_energy_insight.lower_sleep_count %}
+                  {{ sleep_quality_mood_energy_insight.lower_sleep_mood_average|floatformat:1 }}/10
+                  {% else %}
+                  No data
+                  {% endif %}
+                </span>
+              </div>
+              <div
+                class="h-3 bg-surface-container-high rounded-full overflow-hidden"
+              >
+                <div
+                  class="h-full bg-secondary rounded-full"
+                  style="width: {{ sleep_quality_mood_energy_insight.lower_sleep_mood_bar_percent|floatformat:0 }}%;"
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
-    </article>
+      </div>
+    </div>
+  </article>
 
-    <!-- Sleep Quality vs Mood and Energy -->
-    <article
-        class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid lg:grid-cols-12 gap-8 hover:shadow-md transition-shadow">
-        <div class="lg:col-span-5 flex flex-col justify-center">
-            <div class="mb-6 flex flex-wrap items-center gap-2">
-                <span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-label-sm text-label-sm">Recovery</span>
-                <span class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm">{{ sleep_quality_mood_energy_insight.confidence_label }}</span>
-            </div>
-            <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">Sleep Quality, Energy &amp; Mood</h4>
-            <p class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed">
-                {{ sleep_quality_mood_energy_insight.summary }}
-            </p>
-            <div class="flex flex-wrap gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-primary"></div>
-                    <span class="text-label-md font-label-md text-on-surface-variant">Sleep quality 7+</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-surface-container-high"></div>
-                    <span class="text-label-md font-label-md text-on-surface-variant">Sleep quality below 7</span>
-                </div>
-            </div>
+  <!-- Sleep Timing Consistency -->
+  <article
+    class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid lg:grid-cols-12 gap-8 hover:shadow-md transition-shadow"
+  >
+    <div class="lg:col-span-5 flex flex-col justify-center">
+      <div class="mb-6 flex flex-wrap items-center gap-2">
+        <span
+          class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full font-label-sm text-label-sm"
+          >Routine</span
+        >
+        <span
+          class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm"
+          >{{ sleep_timing_consistency_insight.confidence_label }}</span
+        >
+      </div>
+      <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">
+        Sleep Timing Consistency
+      </h4>
+      <p
+        class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed"
+      >
+        {{ sleep_timing_consistency_insight.summary }}
+      </p>
+      {% include 'tracker/partials/insight_info_trigger.html' with title="Sleep Timing Consistency" research=sleep_timing_consistency_insight.research_context action=sleep_timing_consistency_insight.action_text %}
+      <div class="grid grid-cols-2 gap-3">
+        <div
+          class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30"
+        >
+          <span
+            class="material-symbols-outlined text-primary mb-3"
+            data-icon="bedtime"
+            >bedtime</span
+          >
+          <p
+            class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+          >
+            Typical Bed
+          </p>
+          <p class="font-headline-sm text-headline-sm text-on-surface">
+            {{ sleep_timing_consistency_insight.typical_bedtime }}
+          </p>
+          {% if sleep_timing_consistency_insight.has_targets %}
+          <p class="font-label-sm text-label-sm text-primary mt-1">
+            Target {{ sleep_timing_consistency_insight.target_bedtime }}
+          </p>
+          {% endif %}
         </div>
-
-        <div class="lg:col-span-7 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/20">
-            <div class="grid sm:grid-cols-2 gap-6">
-                <div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30">
-                    <div class="flex items-center justify-between gap-4 mb-6">
-                        <div>
-                            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Higher sleep</p>
-                            <p class="font-headline-sm text-headline-sm text-on-surface">
-                                {{ sleep_quality_mood_energy_insight.high_sleep_count }} day{{ sleep_quality_mood_energy_insight.high_sleep_count|pluralize }}
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
-                            <span class="material-symbols-outlined" data-icon="hotel_class">hotel_class</span>
-                        </div>
-                    </div>
-                    <div class="space-y-5">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <span class="font-label-md text-label-md text-on-surface">Energy</span>
-                                <span class="font-label-md text-label-md text-primary">
-                                    {% if sleep_quality_mood_energy_insight.high_sleep_count %}
-                                    {{ sleep_quality_mood_energy_insight.high_sleep_energy_average|floatformat:1 }}/10
-                                    {% else %}
-                                    No data
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="h-3 bg-primary/10 rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full"
-                                    style="width: {{ sleep_quality_mood_energy_insight.high_sleep_energy_bar_percent|floatformat:0 }}%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <span class="font-label-md text-label-md text-on-surface">Mood</span>
-                                <span class="font-label-md text-label-md text-primary">
-                                    {% if sleep_quality_mood_energy_insight.high_sleep_count %}
-                                    {{ sleep_quality_mood_energy_insight.high_sleep_mood_average|floatformat:1 }}/10
-                                    {% else %}
-                                    No data
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="h-3 bg-primary/10 rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full"
-                                    style="width: {{ sleep_quality_mood_energy_insight.high_sleep_mood_bar_percent|floatformat:0 }}%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30">
-                    <div class="flex items-center justify-between gap-4 mb-6">
-                        <div>
-                            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Lower sleep</p>
-                            <p class="font-headline-sm text-headline-sm text-on-surface">
-                                {{ sleep_quality_mood_energy_insight.lower_sleep_count }} day{{ sleep_quality_mood_energy_insight.lower_sleep_count|pluralize }}
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-                            <span class="material-symbols-outlined" data-icon="bedtime_off">bedtime_off</span>
-                        </div>
-                    </div>
-                    <div class="space-y-5">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <span class="font-label-md text-label-md text-on-surface">Energy</span>
-                                <span class="font-label-md text-label-md text-on-surface-variant">
-                                    {% if sleep_quality_mood_energy_insight.lower_sleep_count %}
-                                    {{ sleep_quality_mood_energy_insight.lower_sleep_energy_average|floatformat:1 }}/10
-                                    {% else %}
-                                    No data
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="h-3 bg-surface-container-high rounded-full overflow-hidden">
-                                <div class="h-full bg-secondary rounded-full"
-                                    style="width: {{ sleep_quality_mood_energy_insight.lower_sleep_energy_bar_percent|floatformat:0 }}%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <span class="font-label-md text-label-md text-on-surface">Mood</span>
-                                <span class="font-label-md text-label-md text-on-surface-variant">
-                                    {% if sleep_quality_mood_energy_insight.lower_sleep_count %}
-                                    {{ sleep_quality_mood_energy_insight.lower_sleep_mood_average|floatformat:1 }}/10
-                                    {% else %}
-                                    No data
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="h-3 bg-surface-container-high rounded-full overflow-hidden">
-                                <div class="h-full bg-secondary rounded-full"
-                                    style="width: {{ sleep_quality_mood_energy_insight.lower_sleep_mood_bar_percent|floatformat:0 }}%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div
+          class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30"
+        >
+          <span
+            class="material-symbols-outlined text-secondary mb-3"
+            data-icon="wb_twilight"
+            >wb_twilight</span
+          >
+          <p
+            class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+          >
+            Typical Wake
+          </p>
+          <p class="font-headline-sm text-headline-sm text-on-surface">
+            {{ sleep_timing_consistency_insight.typical_wake_time }}
+          </p>
+          {% if sleep_timing_consistency_insight.has_targets %}
+          <p class="font-label-sm text-label-sm text-primary mt-1">
+            Target {{ sleep_timing_consistency_insight.target_wake_time }}
+          </p>
+          {% endif %}
         </div>
-    </article>
+      </div>
+    </div>
 
-    <!-- Sleep Timing Consistency -->
-    <article
-        class="md:col-span-12 bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/30 grid lg:grid-cols-12 gap-8 hover:shadow-md transition-shadow">
-        <div class="lg:col-span-5 flex flex-col justify-center">
-            <div class="mb-6 flex flex-wrap items-center gap-2">
-                <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full font-label-sm text-label-sm">Routine</span>
-                <span class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm">{{ sleep_timing_consistency_insight.confidence_label }}</span>
-            </div>
-            <h4 class="font-headline-lg text-headline-lg text-on-surface mb-6">Sleep Timing Consistency</h4>
-            <p class="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed">
-                {{ sleep_timing_consistency_insight.summary }}
-            </p>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30">
-                    <span class="material-symbols-outlined text-primary mb-3" data-icon="bedtime">bedtime</span>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Typical Bed</p>
-                    <p class="font-headline-sm text-headline-sm text-on-surface">
-                        {{ sleep_timing_consistency_insight.typical_bedtime }}
-                    </p>
-                    {% if sleep_timing_consistency_insight.has_targets %}
-                    <p class="font-label-sm text-label-sm text-primary mt-1">
-                        Target {{ sleep_timing_consistency_insight.target_bedtime }}
-                    </p>
-                    {% endif %}
-                </div>
-                <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30">
-                    <span class="material-symbols-outlined text-secondary mb-3" data-icon="wb_twilight">wb_twilight</span>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Typical Wake</p>
-                    <p class="font-headline-sm text-headline-sm text-on-surface">
-                        {{ sleep_timing_consistency_insight.typical_wake_time }}
-                    </p>
-                    {% if sleep_timing_consistency_insight.has_targets %}
-                    <p class="font-label-sm text-label-sm text-primary mt-1">
-                        Target {{ sleep_timing_consistency_insight.target_wake_time }}
-                    </p>
-                    {% endif %}
-                </div>
-            </div>
+    <div
+      class="lg:col-span-7 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/20"
+    >
+      <div class="flex items-start justify-between gap-6 mb-8">
+        <div>
+          <p
+            class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider"
+          >
+            Within 60 minutes
+          </p>
+          <p class="text-[48px] leading-[56px] text-primary font-bold">
+            {{ sleep_timing_consistency_insight.consistency_percent|floatformat:0 }}%
+          </p>
+        </div>
+        <div
+          class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0"
+        >
+          <span class="material-symbols-outlined" data-icon="routine"
+            >routine</span
+          >
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <div class="flex items-center justify-between gap-4 mb-3">
+            <span class="font-label-md text-label-md text-on-surface"
+              >Consistent timing</span
+            >
+            <span class="font-label-md text-label-md text-primary">
+              {% if sleep_timing_consistency_insight.consistent_count %}
+              {{ sleep_timing_consistency_insight.consistent_average|floatformat:1 }}/10
+              {% else %}
+              No data
+              {% endif %}
+            </span>
+          </div>
+          <div class="h-4 bg-primary/10 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-primary rounded-full"
+              style="width: {{ sleep_timing_consistency_insight.consistent_bar_percent|floatformat:0 }}%;"
+            ></div>
+          </div>
+          <p class="mt-2 font-label-sm text-label-sm text-on-surface-variant">
+            {{ sleep_timing_consistency_insight.consistent_count }} day{{ sleep_timing_consistency_insight.consistent_count|pluralize }}
+          </p>
         </div>
 
-        <div class="lg:col-span-7 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/20">
-            <div class="flex items-start justify-between gap-6 mb-8">
-                <div>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Within 60 minutes</p>
-                    <p class="text-[48px] leading-[56px] text-primary font-bold">
-                        {{ sleep_timing_consistency_insight.consistency_percent|floatformat:0 }}%
-                    </p>
-                </div>
-                <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
-                    <span class="material-symbols-outlined" data-icon="routine">routine</span>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div>
-                    <div class="flex items-center justify-between gap-4 mb-3">
-                        <span class="font-label-md text-label-md text-on-surface">Consistent timing</span>
-                        <span class="font-label-md text-label-md text-primary">
-                            {% if sleep_timing_consistency_insight.consistent_count %}
-                            {{ sleep_timing_consistency_insight.consistent_average|floatformat:1 }}/10
-                            {% else %}
-                            No data
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="h-4 bg-primary/10 rounded-full overflow-hidden">
-                        <div class="h-full bg-primary rounded-full"
-                            style="width: {{ sleep_timing_consistency_insight.consistent_bar_percent|floatformat:0 }}%;"></div>
-                    </div>
-                    <p class="mt-2 font-label-sm text-label-sm text-on-surface-variant">
-                        {{ sleep_timing_consistency_insight.consistent_count }} day{{ sleep_timing_consistency_insight.consistent_count|pluralize }}
-                    </p>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between gap-4 mb-3">
-                        <span class="font-label-md text-label-md text-on-surface">Variable timing</span>
-                        <span class="font-label-md text-label-md text-on-surface-variant">
-                            {% if sleep_timing_consistency_insight.variable_count %}
-                            {{ sleep_timing_consistency_insight.variable_average|floatformat:1 }}/10
-                            {% else %}
-                            No data
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="h-4 bg-surface-container-high rounded-full overflow-hidden">
-                        <div class="h-full bg-secondary rounded-full"
-                            style="width: {{ sleep_timing_consistency_insight.variable_bar_percent|floatformat:0 }}%;"></div>
-                    </div>
-                    <p class="mt-2 font-label-sm text-label-sm text-on-surface-variant">
-                        {{ sleep_timing_consistency_insight.variable_count }} day{{ sleep_timing_consistency_insight.variable_count|pluralize }}
-                    </p>
-                </div>
-            </div>
+        <div>
+          <div class="flex items-center justify-between gap-4 mb-3">
+            <span class="font-label-md text-label-md text-on-surface"
+              >Variable timing</span
+            >
+            <span class="font-label-md text-label-md text-on-surface-variant">
+              {% if sleep_timing_consistency_insight.variable_count %}
+              {{ sleep_timing_consistency_insight.variable_average|floatformat:1 }}/10
+              {% else %}
+              No data
+              {% endif %}
+            </span>
+          </div>
+          <div
+            class="h-4 bg-surface-container-high rounded-full overflow-hidden"
+          >
+            <div
+              class="h-full bg-secondary rounded-full"
+              style="width: {{ sleep_timing_consistency_insight.variable_bar_percent|floatformat:0 }}%;"
+            ></div>
+          </div>
+          <p class="mt-2 font-label-sm text-label-sm text-on-surface-variant">
+            {{ sleep_timing_consistency_insight.variable_count }} day{{ sleep_timing_consistency_insight.variable_count|pluralize }}
+          </p>
         </div>
-    </article>
+      </div>
+    </div>
+  </article>
 
-    <!-- Actionable Insight Tip -->
-    <article
-        class="md:col-span-12 bg-primary-container text-on-primary-container rounded-3xl p-8 lg:p-10 flex flex-col md:flex-row items-center gap-8 overflow-hidden">
-        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-4xl" data-icon="{{ reflective_suggestion.icon }}" data-variation-settings="filled">{{ reflective_suggestion.icon }}</span>
-        </div>
-        <div class="flex-1">
-            <p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80 mb-2">Reflective Suggestion</p>
-            <h4 class="font-headline-md text-headline-md mb-2">{{ reflective_suggestion.title }}</h4>
-            <p class="font-body-md text-body-md opacity-90 leading-relaxed max-w-2xl">
-                {{ reflective_suggestion.body }}
-            </p>
-        </div>
-        <a href="{% url 'tracker:entry_create' %}"
-            class="px-8 py-4 bg-white text-primary rounded-2xl font-label-md text-label-md font-bold shadow-xl hover:bg-surface-container-low transition-colors shrink-0">
-            {{ reflective_suggestion.action_label }}
-        </a>
-    </article>
+  <!-- Actionable Insight Tip -->
+  <article
+    class="md:col-span-12 bg-primary-container text-on-primary-container rounded-3xl p-8 lg:p-10 flex flex-col md:flex-row items-center gap-8 overflow-hidden"
+  >
+    <div
+      class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"
+    >
+      <span
+        class="material-symbols-outlined text-4xl"
+        data-icon="{{ reflective_suggestion.icon }}"
+        data-variation-settings="filled"
+        >{{ reflective_suggestion.icon }}</span
+      >
+    </div>
+    <div class="flex-1">
+      <p
+        class="font-label-sm text-label-sm uppercase tracking-wider opacity-80 mb-2"
+      >
+        Reflective Suggestion
+      </p>
+      <h4 class="font-headline-md text-headline-md mb-2">
+        {{ reflective_suggestion.title }}
+      </h4>
+      <p class="font-body-md text-body-md opacity-90 leading-relaxed max-w-2xl">
+        {{ reflective_suggestion.body }}
+      </p>
+    </div>
+    <a
+      href="{% url 'tracker:entry_create' %}"
+      class="px-8 py-4 bg-white text-primary rounded-2xl font-label-md text-label-md font-bold shadow-xl hover:bg-surface-container-low transition-colors shrink-0"
+    >
+      {{ reflective_suggestion.action_label }}
+    </a>
+  </article>
 </section>
+
+<div
+  class="insight-info-overlay fixed inset-0 z-[80] bg-stone-900/40 flex items-center justify-center p-6"
+  data-insight-info-overlay
+  data-open="false"
+  aria-hidden="true"
+>
+  <button
+    type="button"
+    class="absolute inset-0 cursor-default"
+    data-insight-info-close
+    aria-label="Close insight information"
+  ></button>
+
+  <section
+    class="insight-info-modal relative flex max-h-[calc(100vh-3rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-surface-container-lowest shadow-2xl border border-outline-variant"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="insight-info-title"
+  >
+    <div
+      class="flex items-start justify-between gap-4 border-b border-outline-variant p-6"
+    >
+      <div>
+        <p
+          class="font-label-sm text-label-sm uppercase tracking-wider text-primary mb-2"
+        >
+          Why this matters
+        </p>
+        <h4
+          class="font-headline-md text-headline-md text-on-surface"
+          data-insight-info-title
+          id="insight-info-title"
+        ></h4>
+      </div>
+      <button
+        type="button"
+        class="w-10 h-10 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high flex items-center justify-center shrink-0"
+        data-insight-info-close
+        aria-label="Close insight information"
+      >
+        <span class="material-symbols-outlined" data-icon="close">close</span>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <section class="space-y-2">
+        <div
+          class="w-10 h-10 rounded-xl bg-primary-fixed text-on-primary-fixed-variant flex items-center justify-center"
+        >
+          <span class="material-symbols-outlined" data-icon="science"
+            >science</span
+          >
+        </div>
+        <h5 class="font-headline-sm text-headline-sm text-on-surface">
+          Research context
+        </h5>
+        <p
+          class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+          data-insight-info-research
+        ></p>
+      </section>
+
+      <section class="space-y-2">
+        <div
+          class="w-10 h-10 rounded-xl bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center"
+        >
+          <span class="material-symbols-outlined" data-icon="tips_and_updates"
+            >tips_and_updates</span
+          >
+        </div>
+        <h5 class="font-headline-sm text-headline-sm text-on-surface">
+          What to try
+        </h5>
+        <p
+          class="font-body-md text-body-md text-primary leading-relaxed"
+          data-insight-info-action
+        ></p>
+      </section>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/insights.js' %}"></script>
 {% endblock %}

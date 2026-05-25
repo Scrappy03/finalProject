@@ -1,4 +1,5 @@
 {% extends 'tracker/base.html' %}
+{% load static %}
 
 {% block title %}Goals - Sanctuary{% endblock %}
 
@@ -171,25 +172,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    const weeklyGoalInput = document.getElementById('id_weekly_exercise_goal');
-    document.querySelectorAll('[data-step-goal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            if (!weeklyGoalInput) return;
-            const step = Number(button.dataset.stepGoal);
-            const currentValue = Number(weeklyGoalInput.value || 0);
-            const nextValue = Math.max(0, Math.min(7, currentValue + step));
-            weeklyGoalInput.value = nextValue;
-        });
-    });
-
-    document.querySelectorAll('[data-toast]').forEach((toast) => {
-        window.setTimeout(() => {
-            toast.classList.add('opacity-0', 'translate-x-4');
-        }, 2500);
-        window.setTimeout(() => {
-            toast.remove();
-        }, 3100);
-    });
-</script>
+<script src="{% static 'js/goals.js' %}"></script>
+<script src="{% static 'js/toasts.js' %}"></script>
 {% endblock %}

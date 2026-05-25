@@ -412,6 +412,56 @@ class GoalsFlowTests(TestCase):
         self.assertEqual(profile.weekly_exercise_goal, 4)
 
 
+class InsightsFlowTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="insightuser",
+            password="pass12345",
+        )
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            target_bedtime="22:30",
+            target_wake_time="07:00",
+            caffeine_cutoff="16:00",
+            weekly_exercise_goal=3,
+            wellbeing_focus="sleep",
+        )
+
+    def test_insights_redirects_anonymous_users_to_login(self):
+        response = self.client.get(reverse("tracker:insights"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('tracker:login')}?next={reverse('tracker:insights')}",
+        )
+
+    def test_insights_page_includes_research_backed_guidance(self):
+        self.client.force_login(self.user)
+        for days_ago in range(3):
+            DailyEntry.objects.create(
+                user=self.user,
+                entry_date=timezone.localdate() - timezone.timedelta(days=days_ago),
+                bedtime="00:30",
+                wake_time="06:30",
+                sleep_quality=5,
+                evening_screen_time="30_60",
+                caffeine_consumed=True,
+                latest_caffeine_time="17:30",
+                exercise_completed=False,
+                energy_rating=5,
+                mood_rating=5,
+            )
+
+        response = self.client.get(reverse("tracker:insights"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sleep Duration Baseline")
+        self.assertContains(response, "commonly recommended adult guideline of 7 or more hours")
+        self.assertContains(response, "This does not prove caffeine caused the difference")
+        self.assertEqual(response.context["sleep_duration_insight"]["average_duration_label"], "6h 00m")
+        self.assertTrue(response.context["sleep_duration_insight"]["is_below_guideline"])
+
+
 class SettingsFlowTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
