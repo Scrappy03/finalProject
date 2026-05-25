@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -145,6 +146,18 @@ def get_daily_streak(user):
         streak += 1
         current_date -= timedelta(days=1)
     return streak
+
+
+def save_daily_entry_for_user(form, user):
+    daily_entry = form.save(commit=False)
+    daily_entry.user = user
+    try:
+        with transaction.atomic():
+            daily_entry.save()
+    except IntegrityError:
+        form.add_error("entry_date", "You already have an entry for this date.")
+        return None
+    return daily_entry
 
 
 def build_weekly_focus(total_entry_count, exercise_completed_count, weekly_exercise_goal, user_profile):
@@ -315,14 +328,12 @@ def entry_create(request):
         entry = None
         if posted_entry_date:
             entry = DailyEntry.objects.filter(user=request.user, entry_date=posted_entry_date).first()
-        form = DailyEntryForm(request.POST, instance=entry)
+        form = DailyEntryForm(request.POST, instance=entry, user=request.user)
         if form.is_valid():
-            daily_entry = form.save(commit=False)
-            daily_entry.user = request.user
-            daily_entry.save()
-            return redirect("tracker:dashboard")
+            if save_daily_entry_for_user(form, request.user):
+                return redirect("tracker:dashboard")
     else:
-        form = DailyEntryForm(instance=entry, initial={"entry_date": today})
+        form = DailyEntryForm(instance=entry, initial={"entry_date": today}, user=request.user)
 
     return render(request, 'tracker/entry_form.html', {
         "cancel_url": "tracker:dashboard",
@@ -343,15 +354,13 @@ def entry_edit(request, entry_id):
     entry = get_object_or_404(DailyEntry, pk=entry_id, user=request.user)
 
     if request.method == "POST":
-        form = DailyEntryForm(request.POST, instance=entry)
+        form = DailyEntryForm(request.POST, instance=entry, user=request.user)
         if form.is_valid():
-            daily_entry = form.save(commit=False)
-            daily_entry.user = request.user
-            daily_entry.save()
-            messages.success(request, "Your entry has been updated.")
-            return redirect("tracker:entry_history")
+            if save_daily_entry_for_user(form, request.user):
+                messages.success(request, "Your entry has been updated.")
+                return redirect("tracker:entry_history")
     else:
-        form = DailyEntryForm(instance=entry)
+        form = DailyEntryForm(instance=entry, user=request.user)
 
     return render(request, "tracker/entry_form.html", {
         "cancel_url": "tracker:entry_history",

@@ -340,7 +340,11 @@ class DailyEntryForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        if self.user is None and self.instance and self.instance.pk:
+            self.user = self.instance.user
+
         for name, field in self.fields.items():
             if isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs["class"] = self.checkbox_class
@@ -353,6 +357,17 @@ class DailyEntryForm(forms.ModelForm):
 
             if name in {"sleep_quality", "energy_rating", "mood_rating"}:
                 field.widget.attrs.update({"min": 1, "max": 10})
+
+    def clean_entry_date(self):
+        entry_date = self.cleaned_data["entry_date"]
+        if (
+            self.user
+            and DailyEntry.objects.filter(user=self.user, entry_date=entry_date)
+            .exclude(pk=self.instance.pk)
+            .exists()
+        ):
+            raise forms.ValidationError("You already have an entry for this date.")
+        return entry_date
 
 
 class UserProfileForm(forms.ModelForm):

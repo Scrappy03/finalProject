@@ -200,6 +200,50 @@ class DailyEntryFlowTests(TestCase):
         self.assertEqual(entry.sleep_quality, 5)
         self.assertEqual(entry.energy_rating, 6)
 
+    def test_entry_edit_rejects_duplicate_entry_date(self):
+        today = timezone.localdate()
+        yesterday = today - timezone.timedelta(days=1)
+        entry = DailyEntry.objects.create(
+            user=self.user,
+            entry_date=today,
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=8,
+            evening_screen_time="30_60",
+            energy_rating=7,
+            mood_rating=8,
+        )
+        DailyEntry.objects.create(
+            user=self.user,
+            entry_date=yesterday,
+            bedtime="22:30",
+            wake_time="07:00",
+            sleep_quality=6,
+            evening_screen_time="under_30",
+            energy_rating=6,
+            mood_rating=6,
+        )
+        updated_data = self.valid_entry_data()
+        updated_data["entry_date"] = yesterday
+
+        response = self.client.post(reverse("tracker:entry_edit", args=[entry.id]), updated_data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You already have an entry for this date.")
+        entry.refresh_from_db()
+        self.assertEqual(entry.entry_date, today)
+
+    def test_entry_create_requires_caffeine_time_when_caffeine_consumed(self):
+        entry_data = self.valid_entry_data()
+        entry_data["caffeine_consumed"] = "on"
+        entry_data["latest_caffeine_time"] = ""
+
+        response = self.client.post(reverse("tracker:entry_create"), entry_data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Enter the latest caffeine time if caffeine was consumed.")
+        self.assertFalse(DailyEntry.objects.filter(user=self.user).exists())
+
     def test_entry_edit_cannot_access_another_users_entry(self):
         other_user = get_user_model().objects.create_user(
             username="otheruser",
