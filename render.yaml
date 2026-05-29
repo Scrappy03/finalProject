@@ -24,3 +24,11 @@ services:
         value: "3.11.7"
       - key: WEB_CONCURRENCY
         value: "4"
+      - key: DEMO_PASSWORD
+        sync: false
+      - key: DEMO_USERNAME
+        value: Demo
+      - key: DEMO_EMAIL
+        value: demo@example.com
+      - key: DEMO_DAYS
+        value: "90"
