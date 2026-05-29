@@ -20,8 +20,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-def get_bool_env(name, default=False):
-    return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
+def get_env(names, default=None):
+    if isinstance(names, str):
+        names = [names]
+
+    for name in names:
+        value = os.environ.get(name)
+        if value:
+            return value
+
+    return default
+
+
+def get_bool_env(names, default=False):
+    value = get_env(names)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
 
 
 def get_list_env(name, default=None):
@@ -39,15 +54,32 @@ def get_int_env(name, default=0):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
+SECRET_KEY = get_env(
+    ["DJANGO_SECRET_KEY", "SECRET_KEY"],
     "django-insecure-o#_qtr@+=q&#0x$vkpopnj2te8i^(onq%ec198&3-u38#@jq5a",
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = get_bool_env("DJANGO_DEBUG", True)
+DEBUG = get_bool_env(
+    "DJANGO_DEBUG",
+    get_env(["RENDER", "RENDER_EXTERNAL_HOSTNAME"]) is None,
+)
 
-ALLOWED_HOSTS = get_list_env("DJANGO_ALLOWED_HOSTS", ["127.0.0.1", "localhost"])
+default_allowed_hosts = ["127.0.0.1", "localhost"]
+if not DEBUG:
+    default_allowed_hosts.append(".onrender.com")
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    default_allowed_hosts.append(RENDER_EXTERNAL_HOSTNAME)
+
+ALLOWED_HOSTS = get_list_env("DJANGO_ALLOWED_HOSTS", default_allowed_hosts)
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+CSRF_TRUSTED_ORIGINS = get_list_env("DJANGO_CSRF_TRUSTED_ORIGINS")
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 
 # Application definition
@@ -79,6 +111,7 @@ CSRF_COOKIE_SECURE = get_bool_env("DJANGO_CSRF_COOKIE_SECURE", not DEBUG)
 SECURE_HSTS_SECONDS = get_int_env("DJANGO_SECURE_HSTS_SECONDS", 0 if DEBUG else 31536000)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = get_bool_env("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
 SECURE_HSTS_PRELOAD = get_bool_env("DJANGO_SECURE_HSTS_PRELOAD", False)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ROOT_URLCONF = "wellbeing_project.urls"
 
@@ -104,12 +137,31 @@ WSGI_APPLICATION = "wellbeing_project.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    try:
+        import dj_database_url
+    except ImportError as exc:
+        raise RuntimeError(
+            "DATABASE_URL is set, but dj-database-url is not installed. "
+            "Install project dependencies with `pip install -r requirements.txt`."
+        ) from exc
+
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -146,7 +198,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 

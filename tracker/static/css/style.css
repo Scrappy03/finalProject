@@ -7,6 +7,7 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+    --color-stone-900: oklch(21.6% 0.006 56.043);
     --color-white: #fff;
     --spacing: 0.25rem;
     --container-xl: 36rem;
@@ -290,6 +291,9 @@
   .z-\[60\] {
     z-index: 60;
   }
+  .z-\[80\] {
+    z-index: 80;
+  }
   .mx-6 {
     margin-inline: calc(var(--spacing) * 6);
   }
@@ -467,6 +471,9 @@
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
   }
+  .max-h-\[calc\(100vh-3rem\)\] {
+    max-height: calc(100vh - 3rem);
+  }
   .min-h-2 {
     min-height: calc(var(--spacing) * 2);
   }
@@ -595,6 +602,9 @@
   .-translate-y-1\/2 {
     --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .cursor-default {
+    cursor: default;
   }
   .cursor-pointer {
     cursor: pointer;
@@ -794,6 +804,9 @@
   .overflow-x-auto {
     overflow-x: auto;
   }
+  .overflow-y-auto {
+    overflow-y: auto;
+  }
   .scroll-smooth {
     scroll-behavior: smooth;
   }
@@ -982,6 +995,12 @@
   }
   .bg-secondary-fixed\/40 {
     background-color: color-mix(in oklab, #c5e7fc 40%, transparent);
+  }
+  .bg-stone-900\/40 {
+    background-color: color-mix(in srgb, oklch(21.6% 0.006 56.043) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-stone-900) 40%, transparent);
+    }
   }
   .bg-surface-container {
     background-color: #f0eee9;
@@ -1441,6 +1460,10 @@
   }
   .opacity-90 {
     opacity: 90%;
+  }
+  .shadow-2xl {
+    --tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-inner {
     --tw-shadow: inset 0 2px 4px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.05));
